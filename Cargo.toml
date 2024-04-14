@@ -1,0 +1,10 @@
+[package]
+name = "london_classical"
+version = "0.1.0"
+edition = "2021"
+authors = ["Penelope Yong <penelopeysm@gmail.com>"]
+description = "Fetch upcoming classical music concerts in London"
+repository = "https://github.com/penelopeysm/london_classical"
+
+[dependencies]
+chrono = "0.4.37"
