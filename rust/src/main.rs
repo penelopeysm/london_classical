@@ -1,6 +1,7 @@
 use chrono::{DateTime, TimeZone, Utc};
 use chrono_tz::Europe::London;
 use serde::Serialize;
+use std::fs::{File, create_dir_all};
 
 #[derive(Debug, Serialize)]
 struct Piece {
@@ -50,11 +51,9 @@ fn display_programme(concert: &Concert) {
 
 #[tokio::main]
 async fn main() {
-    for concert in london_classical::wigmore::get_api().await {
-        println!("Concert: {}", concert.title);
-        println!("Performer: {}", concert.performer);
-        println!("Date and time: {}", concert.datetime.with_timezone(&London));
-        println!("URL: {}", concert.url);
-        println!();
-    }
+    let concerts = london_classical::wigmore::get_api().await;
+
+    create_dir_all("../public").unwrap();
+    let output_file = File::create("../public/concerts.json").unwrap();
+    serde_json::to_writer_pretty(output_file, &concerts).unwrap();
 }

@@ -7,8 +7,6 @@ description = "Fetch upcoming classical music concerts in London"
 repository = "https://github.com/penelopeysm/london_classical"
 
 [lib]
-name = "london_classical"
-crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
 [dependencies]
@@ -18,15 +16,4 @@ reqwest = {version = "0.12.3", features = ["json"]}
 scraper = "0.19.0"
 serde = {version = "1.0.197", features = ["derive"]}
 serde_json = "1.0.115"
-wasm-bindgen = "0.2.92"
-getrandom = { version = "0.2", features = ["js"] }
-serde-wasm-bindgen = "0.6.5"
-wasm-bindgen-futures = "0.4.42"
-gloo-utils = { version = "0.1", features = ["serde"] }
-
-[[example]]
-name = "print"
-path = "examples/print.rs"
-
-[dev-dependencies]
 tokio = {version = "1.37.0", features = ["full"]}

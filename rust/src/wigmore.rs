@@ -1,8 +1,6 @@
 use chrono::{DateTime, Utc};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
-use gloo_utils::format::JsValueSerdeExt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WigmoreFrontPageConcert {
@@ -35,11 +33,17 @@ fn parse_api(json_items: &Vec<serde_json::Value>) -> Vec<WigmoreFrontPageConcert
             "https://wigmore-hall.org.uk{}",
             item["node"]["url"].as_str().unwrap()
         );
-        let performer: String = item["node"]["titleOverrideText"]
+        let mut performer: String = item["node"]["titleOverrideText"]
             .as_str()
             .unwrap()
             .to_string();
-        let title: String = item["node"]["subtitleText"].as_str().unwrap().to_string();
+        let mut title: String = item["node"]["subtitleText"].as_str().unwrap().to_string();
+
+        // If there is no title, the performer is the title, and the performer itself should be
+        // empty
+        if title.is_empty() {
+            std::mem::swap(&mut performer, &mut title);
+        }
 
         concerts.push(WigmoreFrontPageConcert {
             datetime,
@@ -69,20 +73,15 @@ pub async fn get_api() -> Vec<WigmoreFrontPageConcert> {
     concerts
 }
 
-#[wasm_bindgen]
-pub async fn get_api_js() -> JsValue {
-    let concerts = get_api().await;
-    JsValue::from_serde(&concerts).unwrap()
-}
-
-/// {{{1
 /// This function scrapes the Wigmore Hall website to get concerts. As it turns out, Wigmore Hall
 /// provides a public REST API which is much less fragile. This code is kept here in case the API
 /// is ever removed.
+/// {{{1
 #[allow(dead_code)]
 async fn scrape() {
     let client = reqwest::Client::new();
-    let html: String = client.get("https://wigmore-hall.org.uk/whats-on/")
+    let html: String = client
+        .get("https://wigmore-hall.org.uk/whats-on/")
         .send()
         .await
         .unwrap()
