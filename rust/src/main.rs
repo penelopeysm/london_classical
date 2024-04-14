@@ -55,7 +55,7 @@ fn display_programme(concert: &Concert) {
 async fn main() {
     let concerts = london_classical::wigmore::get_api().await;
 
-    create_dir_all("../public").unwrap();
-    let output_file = File::create("../public/concerts.json").unwrap();
+    create_dir_all("../src/assets").unwrap();
+    let output_file = File::create("../src/assets/concerts.json").unwrap();
     serde_json::to_writer_pretty(output_file, &concerts).unwrap();
 }

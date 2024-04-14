@@ -1,27 +1,20 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { type Concert } from "src/types";
 
     export let selectedConcert: Concert | null;
     export let searchTerm: string;
 
     // Initialise list of concerts
-    let concerts: Concert[] = [];
-    onMount(async () => {
-        concerts = await fetch("/concerts.json")
-            .then((r) => r.json())
-            .then((r) =>
-                r.map((c: any) => ({
-                    datetime: new Date(c.datetime),
-                    url: c.url,
-                    venue: "Wigmore Hall",
-                    title: c.title,
-                    performers: [c.performer],
-                    pieces: [],
-                })),
-            );
-        concertsToShow = concerts.filter((c) => satisfiesFilters(c, searchTerm)); 
-    });
+    import rawConcerts from "src/assets/concerts.json";
+    const concerts = rawConcerts.map((c: any) => ({
+        datetime: new Date(c.datetime),
+        url: c.url,
+        venue: "Wigmore Hall",
+        title: c.title,
+        performers: [c.performer],
+        pieces: [],
+    }));
+    let concertsToShow: Concert[] = [];
 
     function satisfiesFilters(concert: Concert, searchTerm: string): boolean {
         if (searchTerm === "") {
@@ -36,7 +29,6 @@
         );
     }
 
-    let concertsToShow: Concert[] = [];
     $: {
         concertsToShow = concerts.filter((c) => satisfiesFilters(c, searchTerm)); 
     }
