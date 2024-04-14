@@ -7,4 +7,6 @@ description = "Fetch upcoming classical music concerts in London"
 repository = "https://github.com/penelopeysm/london_classical"
 
 [dependencies]
-chrono = "0.4.37"
+chrono = {version = "0.4.37", features = ["serde"]}
+chrono-tz = "0.9.0"
+serde = {version = "1.0.197", features = ["derive"]}
