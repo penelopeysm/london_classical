@@ -25,6 +25,7 @@ struct Concert {
     pieces: Vec<Piece>,
 }
 
+#[allow(dead_code)]
 fn from_london_time(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> DateTime<Utc> {
     London
         .with_ymd_and_hms(year, month, day, hour, minute, 0)
@@ -32,6 +33,7 @@ fn from_london_time(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> 
         .with_timezone(&Utc)
 }
 
+#[allow(dead_code)]
 fn display_programme(concert: &Concert) {
     println!("Concert: {}", concert.title);
     println!("Venue: {}", concert.venue);
