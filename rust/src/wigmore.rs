@@ -133,7 +133,8 @@ fn parse_concert_json(
                 let opt_composer = piece["composers"]
                     .as_array()
                     .and_then(|arr| arr[0]["title"].as_str())
-                    .map(|s| s.to_string());
+                    .or(Some(""))
+                    .map(|s| decode_html_entities(s).to_string());
                 match (opt_title, opt_composer) {
                     (Some(title), Some(composer)) => pieces.push(core::Piece { title, composer }),
                     _ => (),
