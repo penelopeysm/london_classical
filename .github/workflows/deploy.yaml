@@ -25,6 +25,12 @@ jobs:
         working-directory: rust
         run: cargo run
 
+      - name: Generate TypeScript types from Rust structs
+        working-directory: rust
+        run: |
+          cargo test
+          mv bindings ../src/lib/
+
       - name: Set up pnpm
         uses: pnpm/action-setup@v3
         with:
