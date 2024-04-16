@@ -6,49 +6,67 @@
 
 <div class="details">
     {#if selectedConcert !== null}
-        <h3>{selectedConcert.title}</h3>
-        {#if selectedConcert.subtitle}
-            <h4>{selectedConcert.subtitle}</h4>
-        {/if}
-        <p>
-            {selectedConcert.datetime.toLocaleString()} at {selectedConcert.venue}
-        </p>
+        <div id="selected">
+            <h2>
+                {selectedConcert.title}
+                {#if selectedConcert.subtitle}
+                    — {selectedConcert.subtitle}
+                {/if}
+            </h2>
+            <p>
+                {selectedConcert.datetime.toLocaleString()} at {selectedConcert.venue}
+            </p>
 
-        <p>
-            <a href={selectedConcert.url}>Link to concert</a>
-            {#if selectedConcert.programme_pdf_url}
-                | <a href={selectedConcert.programme_pdf_url}
-                    >Link to programme (PDF)</a
-                >
+            <p>
+                <a href={selectedConcert.url}>Link to concert</a>
+                {#if selectedConcert.programme_pdf_url}
+                    | <a href={selectedConcert.programme_pdf_url}
+                        >Link to programme (PDF)</a
+                    >
+                {/if}
+            </p>
+
+            <h3>Performer(s)</h3>
+            {#if selectedConcert.performers.length === 0}
+                None listed.
+            {:else}
+                <div class="two-col-grid">
+                    {#each selectedConcert.performers as performer}
+                        <span>{performer.name}</span>
+                        <span>{performer.instrument ? performer.instrument : ""}</span>
+                    {/each}
+                </div>
             {/if}
-        </p>
 
-        {#if selectedConcert.performers.length === 0}
-            <p>No performers listed. (This is a placeholder!)</p>
-        {:else}
-            <h4>Performer{selectedConcert.performers.length > 1 ? "s" : ""}</h4>
-            {#each selectedConcert.performers as performer}
-                <p>{performer}</p>
-            {/each}
-        {/if}
+            <h3>Programme</h3>
+            {#if selectedConcert.pieces.length === 0}
+                None provided.
+            {:else}
+                <div class="two-col-grid">
+                    {#each selectedConcert.pieces as piece}
+                        <span>{piece.composer}</span><span
+                            >{@html piece.title}</span
+                        >
+                    {/each}
+                </div>
+            {/if}
 
-        {#if selectedConcert.pieces.length === 0}
-            <p>No programme provided.</p>
-        {:else}
-            <h4>Programme</h4>
-            <div class="programme">
-                {#each selectedConcert.pieces as piece}
-                    <span>{piece.composer}</span><span>{@html piece.title}</span>
-                {/each}
-            </div>
-        {/if}
-
-        {#if selectedConcert.description}
-            <h4>Description</h4>
-            <p>{@html selectedConcert.description}</p>
-        {/if}
+            <h3>Description</h3>
+            {#if selectedConcert.description}
+                <div id="description">
+                    {#each selectedConcert.description.split("\n") as paragraph}
+                        <p>{paragraph}</p>
+                    {/each}
+                </div>
+            {:else}
+                None provided.
+            {/if}
+        </div>
     {:else}
-        <p>No concert selected</p>
+        <div id="none-selected">
+            <h2>No concert selected</h2>
+            <p>Select a concert from the list on the left to view details :)</p>
+        </div>
     {/if}
 </div>
 
@@ -65,17 +83,30 @@
         border-radius: 10px;
     }
 
-    .details > *:first-child {
+    #selected > *:first-child {
         margin-top: 0;
     }
 
-    .details > *:last-child {
+    #selected > *:last-child {
         margin-bottom: 0;
     }
 
-    div.programme {
+    h3 {
+        margin-bottom: 5px;
+    }
+
+    div#none-selected {
+        display: grid;
+        place-items: center;
+    }
+
+    div.two-col-grid {
         display: grid;
         grid-template-columns: max-content 1fr;
         gap: 4px 30px;
+    }
+
+    div#description > *:first-child {
+        margin-top: 0;
     }
 </style>

@@ -55,7 +55,6 @@
             {/if}
             <p>{concert.datetime.toLocaleString()}</p>
             <p>{concert.venue}</p>
-            <p>{concert.performers.join(", ")}</p>
         </button>
     {/each}
 </div>

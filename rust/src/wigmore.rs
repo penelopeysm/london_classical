@@ -1,9 +1,9 @@
 use crate::core;
 use chrono::{DateTime, Utc};
 use futures::future::join_all;
+use html_escape::decode_html_entities;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
-use html_escape::decode_html_entities;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WigmoreFrontPageConcert {
@@ -125,7 +125,7 @@ fn parse_concert_json(
                 let opt_cycle = piece["cycle"].as_str().map(decode_html_entities);
                 let opt_piece_name = piece["title"].as_str().map(decode_html_entities);
                 let opt_title = match (opt_cycle, opt_piece_name) {
-                    (Some(cycle), Some(piece_name)) => Some(format!("{}, {}", cycle, piece_name)),
+                    (Some(cycle), Some(piece_name)) => Some(format!("{}: {}", cycle, piece_name)),
                     (Some(cycle), None) => Some(cycle.to_string()),
                     (None, Some(piece_name)) => Some(piece_name.to_string()),
                     _ => None,
@@ -150,7 +150,44 @@ fn parse_concert_json(
         .to_lowercase();
     let is_wigmore_u35 = booking_text.contains("tickets for under 35s available");
 
-    // TODO: Parse artists
+    // Parse artists
+    let mut performers = Vec::new();
+    let opt_credits = json["data"]["page"]["credits"].as_array();
+    match opt_credits {
+        None => eprintln!("No performer credits found for concert at {}", fp_entry.url),
+        Some(credits) => {
+            for credit in credits {
+                let opt_artist_name = credit["artist"]["title"].as_str().map(decode_html_entities);
+                let opt_role = credit["role"].as_str().map(decode_html_entities);
+                match (opt_artist_name, opt_role) {
+                    (Some(artist_name), Some(role)) => performers.push(core::Performer {
+                        name: artist_name.to_string(),
+                        instrument: Some(role.to_string()),
+                    }),
+                    _ => (),
+                }
+            }
+        }
+    }
+
+    fn clean_up_description(s: &str) -> String {
+        // Split paragraphs
+        let s = decode_html_entities(s)
+            .to_string()
+            .replace("</p><p>", "\n")
+            .replace("<p>", "")
+            .replace("</p>", "");
+        // Then remove any remaining HTML tags, it just seems excessive
+        // to keep them in the description
+        let fragments = scraper::Html::parse_fragment(&s);
+        let mut cleaned = String::new();
+        for node in fragments.tree {
+            if let scraper::Node::Text(text_node) = node {
+                cleaned.push_str(&text_node.text);
+            }
+        }
+        cleaned
+    }
 
     core::Concert {
         datetime: fp_entry.datetime,
@@ -159,13 +196,13 @@ fn parse_concert_json(
         subtitle: fp_entry.subtitle.clone(),
         description: json["data"]["page"]["overviewText"]
             .as_str()
-            .map(|s| decode_html_entities(s).to_string()),
+            .map(clean_up_description),
         programme_pdf_url: json["data"]["page"]["programmeDocument"]["url"]
             .as_str()
             .map(|s| s.to_string()),
         venue: "Wigmore Hall".to_string(),
         is_wigmore_u35,
-        performers: Vec::new(),
+        performers,
         pieces,
     }
 }
