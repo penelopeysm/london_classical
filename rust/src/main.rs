@@ -1,19 +1,9 @@
 use chrono::{DateTime, TimeZone, Utc};
 use chrono_tz::Europe::London;
+use futures::stream::{self, StreamExt};
+use london_classical::core;
 use serde::Serialize;
-use std::fs::{File, create_dir_all};
-
-#[derive(Debug, Serialize)]
-struct Piece {
-    composer: String,
-    title: String,
-}
-
-#[derive(Debug, Serialize)]
-struct Performer {
-    name: String,
-    instrument: Option<String>,
-}
+use std::fs::{create_dir_all, File};
 
 #[derive(Debug, Serialize)]
 struct Concert {
@@ -21,8 +11,8 @@ struct Concert {
     url: String,
     venue: String,
     title: String,
-    performers: Vec<Performer>,
-    pieces: Vec<Piece>,
+    performers: Vec<core::Performer>,
+    pieces: Vec<core::Piece>,
 }
 
 #[allow(dead_code)]
@@ -53,9 +43,23 @@ fn display_programme(concert: &Concert) {
 
 #[tokio::main]
 async fn main() {
-    let concerts = london_classical::wigmore::get_api().await;
+    use london_classical::wigmore;
+    let client = reqwest::Client::new();
+    let concerts = wigmore::get_api(&client).await;
+
+    // TODO: Fetch all concerts, not just the first 20. (Don't want to spam Wigmore's servers too
+    // much)
+    let mut full_concerts = stream::iter(&concerts[..20])
+        .map(|concert| wigmore::get_concert(&concert, &client))
+        .buffer_unordered(10)
+        .collect::<Vec<Option<core::Concert>>>()
+        .await
+        .into_iter()
+        .flatten()
+        .collect::<Vec<core::Concert>>();
+    full_concerts.sort_by_key(|concert| concert.datetime);
 
     create_dir_all("../src/assets").unwrap();
     let output_file = File::create("../src/assets/concerts.json").unwrap();
-    serde_json::to_writer_pretty(output_file, &concerts).unwrap();
+    serde_json::to_writer_pretty(output_file, &full_concerts).unwrap();
 }

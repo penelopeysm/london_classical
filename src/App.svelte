@@ -4,19 +4,26 @@
     import Overview from "src/lib/Overview.svelte";
     import Details from "src/lib/Details.svelte";
 
-    import { type Concert } from "src/types";
-    let searchTerm: string = "";
+    import { type FiltersType } from "src/lib/filters";
+    import { type Concert } from "src/lib/bindings/Concert";
     let selectedConcert: Concert | null = null;
+
+    let filters: Filters = {
+        searchTerm: "",
+        wigmoreU35: false,
+    };
+
+    let searchTerm: string = "";
 </script>
 
 <body>
     <main>
         <div class="top">
             <Title />
-            <Filters bind:searchTerm />
+            <Filters bind:filters />
         </div>
         <div class="bottom">
-            <Overview bind:searchTerm bind:selectedConcert />
+            <Overview bind:filters bind:selectedConcert />
             <Details bind:selectedConcert />
         </div>
     </main>
@@ -51,7 +58,8 @@
     }
 
     div.bottom {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 30px;
         width: 100%;
         min-height: 0;  /* So confusing that this is required */
