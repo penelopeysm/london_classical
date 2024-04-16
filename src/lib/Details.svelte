@@ -1,5 +1,6 @@
 <script lang="ts">
     import { type Concert } from "src/lib/bindings/Concert";
+    import { formatDate } from "src/utils";
 
     export let selectedConcert: Concert | null;
 </script>
@@ -14,7 +15,22 @@
                 {/if}
             </h2>
             <p>
-                {selectedConcert.datetime.toLocaleString()} at {selectedConcert.venue}
+                {formatDate(new Date(selectedConcert.datetime))}
+                •
+                {selectedConcert.venue}
+                •
+                {#if selectedConcert.min_price !== null && selectedConcert.max_price !== null}
+                    {#if selectedConcert.min_price === selectedConcert.max_price}
+                        {#if selectedConcert.min_price === 0}
+                            Free entry
+                        {:else}
+                            £{selectedConcert.min_price / 100}
+                        {/if}
+                    {:else}
+                        £{selectedConcert.min_price /
+                            100}–£{selectedConcert.max_price / 100}
+                    {/if}
+                {/if}
             </p>
 
             <p>
@@ -33,7 +49,11 @@
                 <div class="two-col-grid">
                     {#each selectedConcert.performers as performer}
                         <span>{performer.name}</span>
-                        <span>{performer.instrument ? performer.instrument : ""}</span>
+                        <span
+                            >{performer.instrument
+                                ? performer.instrument
+                                : ""}</span
+                        >
                     {/each}
                 </div>
             {/if}

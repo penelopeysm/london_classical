@@ -2,6 +2,7 @@ use crate::core;
 use chrono::{DateTime, Utc};
 use futures::future::join_all;
 use html_escape::decode_html_entities;
+use regex::Regex;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 
@@ -170,6 +171,23 @@ fn parse_concert_json(
         }
     }
 
+    // Figure out prices
+    let prices_text = json["data"]["page"]["pricesText"].as_str().unwrap();
+    let (min_price, max_price) = match prices_text {
+        _ if prices_text.to_lowercase() == "free" => (Some(0), Some(0)),
+        _ => {
+            let re = Regex::new(r"£(\d+)").unwrap();
+            let all_prices_in_pennies: Vec<u32> = re
+                .captures_iter(prices_text)
+                .map(|cap| cap[1].parse::<u32>().unwrap())
+                .collect::<Vec<u32>>();
+            (
+                all_prices_in_pennies.iter().min().map(|&x| x * 100),
+                all_prices_in_pennies.iter().max().map(|&x| x * 100),
+            )
+        }
+    };
+
     fn clean_up_description(s: &str) -> String {
         // Split paragraphs
         let s = decode_html_entities(s)
@@ -204,6 +222,8 @@ fn parse_concert_json(
         is_wigmore_u35,
         performers,
         pieces,
+        min_price,
+        max_price,
     }
 }
 

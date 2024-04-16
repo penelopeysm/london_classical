@@ -1,18 +1,14 @@
 <script lang="ts">
     import { type Concert } from "src/lib/bindings/Concert";
     import { type FiltersType } from "src/lib/filters";
+    import { formatDate } from "src/utils";
 
     export let selectedConcert: Concert | null;
     export let filters: FiltersType;
 
     // Initialise list of concerts
     import rawConcerts from "src/assets/concerts.json";
-    const concerts = rawConcerts.map((c) => {
-        return {
-            ...c,
-            datetime: new Date(c.datetime),
-        } as unknown as Concert;
-    });
+    const concerts = rawConcerts as Concert[];
     let concertsToShow: Concert[] = [];
 
     function satisfiesFilters(concert: Concert, filters: FiltersType): boolean {
@@ -53,7 +49,7 @@
             {#if concert.subtitle !== null}
                 <h4>{concert.subtitle}</h4>
             {/if}
-            <p>{concert.datetime.toLocaleString()}</p>
+            <p>{formatDate(new Date(concert.datetime))}</p>
             <p>{concert.venue}</p>
         </button>
     {/each}

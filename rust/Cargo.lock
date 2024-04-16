@@ -688,6 +688,7 @@ dependencies = [
  "chrono-tz",
  "futures",
  "html-escape",
+ "regex",
  "reqwest",
  "scraper",
  "serde",

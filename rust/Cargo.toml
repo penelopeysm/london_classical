@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["Penelope Yong <penelopeysm@gmail.com>"]
 description = "Fetch upcoming classical music concerts in London"
 repository = "https://github.com/penelopeysm/london_classical"
+default-run = "london_classical"
 
 [lib]
 path = "src/lib.rs"
@@ -14,6 +15,7 @@ chrono = {version = "0.4.37", features = ["serde"]}
 chrono-tz = "0.9.0"
 futures = "0.3.30"
 html-escape = "0.2.13"
+regex = "1.10.4"
 reqwest = {version = "0.12.3", features = ["json"]}
 scraper = "0.19.0"
 serde = {version = "1.0.197", features = ["derive"]}
