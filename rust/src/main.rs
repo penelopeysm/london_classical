@@ -47,9 +47,9 @@ async fn main() {
     let client = reqwest::Client::new();
     let concerts = wigmore::get_api(&client).await;
 
-    // TODO: Fetch all concerts, not just the first 20. (Don't want to spam Wigmore's servers too
+    // TODO: Fetch all concerts, not just the first 30. (Don't want to spam Wigmore's servers too
     // much)
-    let mut full_concerts = stream::iter(&concerts[..20])
+    let mut full_concerts = stream::iter(&concerts[..30])
         .map(|concert| wigmore::get_concert(&concert, &client))
         .buffer_unordered(10)
         .collect::<Vec<Option<core::Concert>>>()

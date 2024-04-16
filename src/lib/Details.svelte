@@ -38,7 +38,7 @@
             <h4>Programme</h4>
             <div class="programme">
                 {#each selectedConcert.pieces as piece}
-                    <span>{piece.composer}</span><span>{piece.title}</span>
+                    <span>{piece.composer}</span><span>{@html piece.title}</span>
                 {/each}
             </div>
         {/if}

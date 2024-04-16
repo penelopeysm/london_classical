@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use futures::future::join_all;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
+use html_escape::decode_html_entities;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WigmoreFrontPageConcert {
@@ -121,8 +122,8 @@ fn parse_concert_json(
         None => eprintln!("No repertoire found for concert at {}", fp_entry.url),
         Some(repertoire) => {
             for piece in repertoire {
-                let opt_cycle = piece["cycle"].as_str();
-                let opt_piece_name = piece["title"].as_str();
+                let opt_cycle = piece["cycle"].as_str().map(decode_html_entities);
+                let opt_piece_name = piece["title"].as_str().map(decode_html_entities);
                 let opt_title = match (opt_cycle, opt_piece_name) {
                     (Some(cycle), Some(piece_name)) => Some(format!("{}, {}", cycle, piece_name)),
                     (Some(cycle), None) => Some(cycle.to_string()),
@@ -157,7 +158,7 @@ fn parse_concert_json(
         subtitle: fp_entry.subtitle.clone(),
         description: json["data"]["page"]["overviewText"]
             .as_str()
-            .map(|s| s.to_string()),
+            .map(|s| decode_html_entities(s).to_string()),
         programme_pdf_url: json["data"]["page"]["programmeDocument"]["url"]
             .as_str()
             .map(|s| s.to_string()),
