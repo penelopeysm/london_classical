@@ -3,17 +3,24 @@
     import Filters from "src/lib/Filters.svelte";
     import Overview from "src/lib/Overview.svelte";
     import Details from "src/lib/Details.svelte";
-
-    import { type FiltersType } from "src/lib/filters";
     import { type Concert } from "src/lib/bindings/Concert";
-    let selectedConcert: Concert | null = null;
+    import { type FiltersType, satisfies } from "src/lib/filters";
 
-    let filters: Filters = {
+    // Initialise list of concerts
+    import rawConcerts from "src/assets/concerts.json";
+    const concerts = rawConcerts as Concert[];
+
+    // Filter concerts
+    let filters: FiltersType = {
         searchTerm: "",
         wigmoreU35: false,
     };
+    let concertsToShow: Concert[];
+    $: {
+        concertsToShow = concerts.filter((c) => satisfies(c, filters));
+    }
 
-    let searchTerm: string = "";
+    let selectedConcert: Concert | null = null;
 </script>
 
 <body>
@@ -23,7 +30,7 @@
             <Filters bind:filters />
         </div>
         <div class="bottom">
-            <Overview bind:filters bind:selectedConcert />
+            <Overview concerts={concertsToShow} bind:selectedConcert />
             <Details bind:selectedConcert />
         </div>
     </main>
@@ -62,7 +69,7 @@
         grid-template-columns: 1fr 1fr;
         gap: 30px;
         width: 100%;
-        min-height: 0;  /* So confusing that this is required */
+        min-height: 0; /* So confusing that this is required */
         max-height: 100%;
     }
 </style>

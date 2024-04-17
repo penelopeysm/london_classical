@@ -1,43 +1,14 @@
 <script lang="ts">
     import { type Concert } from "src/lib/bindings/Concert";
     import Tags from "src/lib/Tags.svelte";
-    import { type FiltersType } from "src/lib/filters";
     import { formatDate, getPriceString } from "src/utils";
 
+    export let concerts: Concert[];
     export let selectedConcert: Concert | null;
-    export let filters: FiltersType;
-
-    // Initialise list of concerts
-    import rawConcerts from "src/assets/concerts.json";
-    const concerts = rawConcerts as Concert[];
-    let concertsToShow: Concert[] = [];
-
-    function satisfiesFilters(concert: Concert, filters: FiltersType): boolean {
-        // Check search filter
-        let ciSearchTerm = filters.searchTerm.toLowerCase();
-        let searchPass =
-            filters.searchTerm === "" ||
-            concert.title.toLowerCase().includes(ciSearchTerm) ||
-            (concert.subtitle !== null &&
-                concert.subtitle.toLowerCase().includes(ciSearchTerm)) ||
-            concert.venue.toLowerCase().includes(ciSearchTerm) ||
-            concert.performers.some((p) =>
-                p.name.toLowerCase().includes(ciSearchTerm),
-            );
-
-        // Check U35 filter
-        let u35Pass = filters.wigmoreU35 ? concert.is_wigmore_u35 : true;
-
-        return searchPass && u35Pass;
-    }
-
-    $: {
-        concertsToShow = concerts.filter((c) => satisfiesFilters(c, filters));
-    }
 </script>
 
 <div class="overview">
-    {#each concertsToShow as concert}
+    {#each concerts as concert}
         <button
             class="concert"
             class:active={selectedConcert === concert}
