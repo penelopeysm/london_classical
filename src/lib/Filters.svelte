@@ -31,6 +31,7 @@
         background-color: #f0f0f0;
         padding: 10px;
         border-radius: 0.5rem;
+        border: 2px solid #666;
 
         display: flex;
         flex-direction: column;

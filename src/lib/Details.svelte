@@ -1,6 +1,7 @@
 <script lang="ts">
     import { type Concert } from "src/lib/bindings/Concert";
-    import { formatDate } from "src/utils";
+    import Tags from "src/lib/Tags.svelte";
+    import { formatDate, getPriceString } from "src/utils";
 
     export let selectedConcert: Concert | null;
 </script>
@@ -8,6 +9,7 @@
 <div class="details">
     {#if selectedConcert !== null}
         <div id="selected">
+            <Tags concert={selectedConcert} />
             <h2>
                 {selectedConcert.title}
                 {#if selectedConcert.subtitle}
@@ -16,24 +18,9 @@
             </h2>
             <p>
                 {formatDate(new Date(selectedConcert.datetime))}
-                •
-                {selectedConcert.venue}
-                •
-                {#if selectedConcert.min_price !== null && selectedConcert.max_price !== null}
-                    {#if selectedConcert.min_price === selectedConcert.max_price}
-                        {#if selectedConcert.min_price === 0}
-                            Free entry
-                        {:else}
-                            £{selectedConcert.min_price / 100}
-                        {/if}
-                    {:else}
-                        £{selectedConcert.min_price /
-                            100}–£{selectedConcert.max_price / 100}
-                    {/if}
-                {/if}
-            </p>
-
-            <p>
+                |
+                {getPriceString(selectedConcert)}
+                <br />
                 <a href={selectedConcert.url}>Link to concert</a>
                 {#if selectedConcert.programme_pdf_url}
                     | <a href={selectedConcert.programme_pdf_url}
@@ -99,7 +86,7 @@
         overflow-y: auto;
 
         padding: 10px;
-        border: 2px solid #000;
+        border: 2px solid #666;
         border-radius: 10px;
     }
 

@@ -33,7 +33,7 @@
     body {
         display: flex;
         justify-content: center;
-        background-color: #fef0ff;
+        background-color: #f5f5f5;
         height: 100vh;
         overflow: hidden;
     }

@@ -1,7 +1,8 @@
 <script lang="ts">
     import { type Concert } from "src/lib/bindings/Concert";
+    import Tags from "src/lib/Tags.svelte";
     import { type FiltersType } from "src/lib/filters";
-    import { formatDate } from "src/utils";
+    import { formatDate, getPriceString } from "src/utils";
 
     export let selectedConcert: Concert | null;
     export let filters: FiltersType;
@@ -42,15 +43,19 @@
             class:active={selectedConcert === concert}
             class:wigmoreU35={concert.is_wigmore_u35}
             on:click={() => {
-                selectedConcert = concert;
+                selectedConcert = selectedConcert === concert ? null : concert;
             }}
         >
+            <Tags {concert} />
             <h3>{concert.title}</h3>
             {#if concert.subtitle !== null}
                 <h4>{concert.subtitle}</h4>
             {/if}
-            <p>{formatDate(new Date(concert.datetime))}</p>
-            <p>{concert.venue}</p>
+            <p>
+                {formatDate(new Date(concert.datetime))}
+                |
+                {getPriceString(concert)}
+            </p>
         </button>
     {/each}
 </div>
@@ -63,10 +68,11 @@
         width: 100%;
         height: 100%;
         overflow-y: auto;
+        padding: 0 15px 0 0;
     }
 
     .concert {
-        border: 2px solid #000;
+        border: 2px solid #666;
         padding: 10px;
         border-radius: 5px;
         width: 100%;
@@ -74,18 +80,19 @@
         font-family: inherit;
         text-align: left;
         cursor: pointer;
+
+        transition: border-color 0.3s;
         transition: background-color 0.3s;
+        transition: margin-left 0.3s;
     }
 
     .active {
-        background-color: #ff99bb;
-    }
-
-    .wigmoreU35 {
-        border: 2px dashed #c13ad6;
+        border-color: #a6628f;
+        background-color: #f5e9f1;
+        margin-left: 15px;
     }
 
     .concert > * {
-        margin: 0;
+        margin: 2px 0;
     }
 </style>
