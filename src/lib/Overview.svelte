@@ -1,21 +1,42 @@
 <script lang="ts">
-    import { type Concert } from "src/lib/bindings/Concert";
     import Tags from "src/lib/Tags.svelte";
-    import { formatDate, getPriceString } from "src/utils";
+    import { type HashedConcert, formatDate, getPriceString } from "src/utils";
 
-    export let concerts: Concert[];
-    export let selectedConcert: Concert | null;
+    export let concerts: HashedConcert[];
+    export let selectedConcertHashes: string[];
+
+    // Event handler when a concert is clicked. The behaviour is chosen to
+    // provide as intuitive a UI as possible
+    function addOrRemove(event: MouseEvent, hash: string) {
+        if (selectedConcertHashes.includes(hash)) {
+            if (event.shiftKey) {
+                selectedConcertHashes = selectedConcertHashes.filter(
+                    (h) => h !== hash,
+                );
+            } else {
+                if (selectedConcertHashes.length === 1) {
+                    selectedConcertHashes = [];
+                } else {
+                    selectedConcertHashes = [hash];
+                }
+            }
+        } else {
+            if (event.shiftKey) {
+                selectedConcertHashes = [...selectedConcertHashes, hash];
+            } else {
+                selectedConcertHashes = [hash];
+            }
+        }
+    }
 </script>
 
 <div class="overview">
     {#each concerts as concert}
         <button
             class="concert"
-            class:active={selectedConcert === concert}
+            class:active={selectedConcertHashes.includes(concert.hash)}
             class:wigmoreU35={concert.is_wigmore_u35}
-            on:click={() => {
-                selectedConcert = selectedConcert === concert ? null : concert;
-            }}
+            on:click={(event) => addOrRemove(event, concert.hash)}
         >
             <Tags {concert} />
             <h3>{concert.title}</h3>

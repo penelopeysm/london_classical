@@ -4,23 +4,25 @@
     import Overview from "src/lib/Overview.svelte";
     import Details from "src/lib/Details.svelte";
     import { type Concert } from "src/lib/bindings/Concert";
+    import { type HashedConcert, hashConcert } from "src/utils";
     import { type FiltersType, satisfies } from "src/lib/filters";
 
     // Initialise list of concerts
     import rawConcerts from "src/assets/concerts.json";
-    const concerts = rawConcerts as Concert[];
+    const concerts: HashedConcert[] = rawConcerts.map(hashConcert);
 
     // Filter concerts
     let filters: FiltersType = {
         searchTerm: "",
         wigmoreU35: false,
     };
-    let concertsToShow: Concert[];
+    let concertsToShow: HashedConcert[];
+    let selectedConcertHashes: string[] = [];
+    let selectedConcerts: HashedConcert[];
     $: {
         concertsToShow = concerts.filter((c) => satisfies(c, filters));
+        selectedConcerts = concertsToShow.filter((c) => selectedConcertHashes.includes(c.hash));
     }
-
-    let selectedConcert: Concert | null = null;
 </script>
 
 <body>
@@ -30,8 +32,8 @@
             <Filters bind:filters />
         </div>
         <div class="bottom">
-            <Overview concerts={concertsToShow} bind:selectedConcert />
-            <Details bind:selectedConcert />
+            <Overview concerts={concertsToShow} bind:selectedConcertHashes />
+            <Details bind:selectedConcerts />
         </div>
     </main>
 </body>

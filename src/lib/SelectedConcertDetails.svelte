@@ -1,0 +1,86 @@
+<script lang="ts">
+    import Tags from "src/lib/Tags.svelte";
+    import { type HashedConcert, formatDate, getPriceString } from "src/utils";
+
+    export let selectedConcert: HashedConcert;
+</script>
+
+<div id="selected">
+    <Tags concert={selectedConcert} />
+    <h2>
+        {selectedConcert.title}
+        {#if selectedConcert.subtitle}
+            — {selectedConcert.subtitle}
+        {/if}
+    </h2>
+    <p>
+        {formatDate(new Date(selectedConcert.datetime))}
+        |
+        {getPriceString(selectedConcert)}
+        <br />
+        <a href={selectedConcert.url}>Link to concert</a>
+        {#if selectedConcert.programme_pdf_url}
+            | <a href={selectedConcert.programme_pdf_url}
+                >Link to programme (PDF)</a
+            >
+        {/if}
+    </p>
+
+    <h3>Performer(s)</h3>
+    {#if selectedConcert.performers.length === 0}
+        None listed.
+    {:else}
+        <div class="two-col-grid">
+            {#each selectedConcert.performers as performer}
+                <span>{performer.name}</span>
+                <span>{performer.instrument ? performer.instrument : ""}</span>
+            {/each}
+        </div>
+    {/if}
+
+    <h3>Programme</h3>
+    {#if selectedConcert.pieces.length === 0}
+        None provided.
+    {:else}
+        <div class="two-col-grid">
+            {#each selectedConcert.pieces as piece}
+                <span>{piece.composer}</span><span>{@html piece.title}</span>
+            {/each}
+        </div>
+    {/if}
+
+    <h3>Description</h3>
+    {#if selectedConcert.description}
+        <div id="description">
+            {#each selectedConcert.description.split("\n") as paragraph}
+                <p>{paragraph}</p>
+            {/each}
+        </div>
+    {:else}
+        None provided.
+    {/if}
+</div>
+
+<style>
+    #selected > *:first-child {
+        margin-top: 0;
+    }
+
+    #selected > *:last-child {
+        margin-bottom: 0;
+    }
+
+    h3 {
+        margin-bottom: 5px;
+    }
+
+    div.two-col-grid {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 4px 30px;
+    }
+
+    div#description > *:first-child {
+        margin-top: 0;
+    }
+</style>

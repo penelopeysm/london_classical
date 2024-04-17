@@ -1,78 +1,61 @@
 <script lang="ts">
-    import { type Concert } from "src/lib/bindings/Concert";
-    import Tags from "src/lib/Tags.svelte";
-    import { formatDate, getPriceString } from "src/utils";
+    import { type HashedConcert } from "src/utils";
+    import SelectedConcertDetails from "src/lib/SelectedConcertDetails.svelte";
 
-    export let selectedConcert: Concert | null;
+    export let selectedConcerts: HashedConcert[];
+
+    let copyButton: HTMLButtonElement;
+    function copyTextToClipboard() {
+        navigator.clipboard.writeText(shareCode);
+        let w = copyButton.offsetWidth;
+        copyButton.style.width = w + "px";
+        copyButton.textContent = "Copied!";
+        setTimeout(() => {
+            copyButton.textContent = "Copy to clipboard";
+            copyButton.style.width = "";
+        }, 1000);
+    }
+
+    let shareCode: string;
+    $: {
+        shareCode = selectedConcerts.map((concert) => concert.hash).join(",");
+    }
 </script>
 
 <div class="details">
-    {#if selectedConcert !== null}
-        <div id="selected">
-            <Tags concert={selectedConcert} />
-            <h2>
-                {selectedConcert.title}
-                {#if selectedConcert.subtitle}
-                    — {selectedConcert.subtitle}
-                {/if}
-            </h2>
-            <p>
-                {formatDate(new Date(selectedConcert.datetime))}
-                |
-                {getPriceString(selectedConcert)}
-                <br />
-                <a href={selectedConcert.url}>Link to concert</a>
-                {#if selectedConcert.programme_pdf_url}
-                    | <a href={selectedConcert.programme_pdf_url}
-                        >Link to programme (PDF)</a
-                    >
-                {/if}
-            </p>
-
-            <h3>Performer(s)</h3>
-            {#if selectedConcert.performers.length === 0}
-                None listed.
-            {:else}
-                <div class="two-col-grid">
-                    {#each selectedConcert.performers as performer}
-                        <span>{performer.name}</span>
-                        <span
-                            >{performer.instrument
-                                ? performer.instrument
-                                : ""}</span
-                        >
-                    {/each}
-                </div>
-            {/if}
-
-            <h3>Programme</h3>
-            {#if selectedConcert.pieces.length === 0}
-                None provided.
-            {:else}
-                <div class="two-col-grid">
-                    {#each selectedConcert.pieces as piece}
-                        <span>{piece.composer}</span><span
-                            >{@html piece.title}</span
-                        >
-                    {/each}
-                </div>
-            {/if}
-
-            <h3>Description</h3>
-            {#if selectedConcert.description}
-                <div id="description">
-                    {#each selectedConcert.description.split("\n") as paragraph}
-                        <p>{paragraph}</p>
-                    {/each}
-                </div>
-            {:else}
-                None provided.
-            {/if}
-        </div>
-    {:else}
-        <div id="none-selected">
+    {#if selectedConcerts.length === 1}
+        <SelectedConcertDetails selectedConcert={selectedConcerts[0]} />
+    {:else if selectedConcerts.length === 0}
+        <div id="centred-text">
             <h2>No concert selected</h2>
             <p>Select a concert from the list on the left to view details :)</p>
+            <p class="italic">
+                (Tip: Use shift-click to select multiple concerts)
+            </p>
+        </div>
+    {:else}
+        <div id="centred-text">
+            <h2>{selectedConcerts.length} concerts selected</h2>
+            <div id="selected-concerts-summary">
+                {#each selectedConcerts as concert}
+                    <p>
+                        <a href={concert.url}>
+                            {concert.title}
+                        </a>
+                    </p>
+                {/each}
+            </div>
+            <p>
+                Share this list of concerts with somebody by sending them the
+                text below.
+                (They don't have any way of inputting this code into the website
+                yet, but one day...)
+            </p>
+            <p></p>
+            <p class="code">{shareCode}</p>
+            <button bind:this={copyButton} on:click={copyTextToClipboard}>
+                Copy to clipboard
+            </button>
         </div>
     {/if}
 </div>
@@ -90,30 +73,36 @@
         border-radius: 10px;
     }
 
-    #selected > *:first-child {
-        margin-top: 0;
-    }
-
-    #selected > *:last-child {
-        margin-bottom: 0;
-    }
-
-    h3 {
-        margin-bottom: 5px;
-    }
-
-    div#none-selected {
+    div#centred-text {
         display: grid;
         place-items: center;
+        gap: 5px;
     }
 
-    div.two-col-grid {
-        display: grid;
-        grid-template-columns: max-content 1fr;
-        gap: 4px 30px;
+    div#selected-concerts-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 70%;
+        margin-bottom: 20px;
     }
 
-    div#description > *:first-child {
-        margin-top: 0;
+    p {
+        margin: 0;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .code {
+        font-family: monospace;
+        width: max-content;
+        max-width: 80%;
+    }
+
+    button {
+        margin-top: 5px;
+        font-family: inherit;
     }
 </style>
