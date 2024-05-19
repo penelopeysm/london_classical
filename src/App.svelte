@@ -14,14 +14,16 @@
     // Filter concerts
     let filters: FiltersType = {
         searchTerm: "",
-        wigmoreU35: false,
+        booleanTagNames: [],
     };
     let concertsToShow: HashedConcert[];
     let selectedConcertHashes: string[] = [];
     let selectedConcerts: HashedConcert[];
     $: {
         concertsToShow = concerts.filter((c) => satisfies(c, filters));
-        selectedConcerts = concertsToShow.filter((c) => selectedConcertHashes.includes(c.hash));
+        selectedConcerts = concertsToShow.filter((c) =>
+            selectedConcertHashes.includes(c.hash),
+        );
     }
 </script>
 

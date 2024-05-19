@@ -1,27 +1,55 @@
 <script lang="ts">
-    import { type FiltersType } from "src/lib/filters";
+    import { type FiltersType, allBooleanFilters } from "src/lib/filters";
+    import Tag from "src/lib/Tag.svelte";
+
     export let filters: FiltersType;
-    $: {
-        console.log(filters);
+
+    function toggleBooleanTag(
+        event: CustomEvent<{ boolFilter: BooleanFilter }>,
+    ) {
+        const { boolFilter } = event.detail;
+
+        if (filters.booleanTagNames.includes(boolFilter.tagName)) {
+            filters.booleanTagNames = filters.booleanTagNames.filter(
+                (tagName) => tagName !== boolFilter.tagName,
+            );
+        } else {
+            filters.booleanTagNames = [
+                ...filters.booleanTagNames,
+                boolFilter.tagName,
+            ];
+        }
     }
 </script>
 
 <div class="filters">
-    <input
-        id="search"
-        type="text"
-        placeholder="Search for a composer, performer, etc."
-        bind:value={filters.searchTerm}
-    />
+    <span class="bold">Currently filtering by</span>
+    <div class="horizontal-flex">
 
-    <div id="u35">
         <input
-            type="checkbox"
-            id="wigmoreU35"
-            name="wigmoreU35"
-            bind:checked={filters.wigmoreU35}
+            id="search"
+            type="text"
+            placeholder="Search for a composer, performer, etc."
+            bind:value={filters.searchTerm}
         />
-        <label for="wigmoreU35">£5 Wigmore Hall under-35 tickets only?</label>
+        {#each allBooleanFilters as boolFilter}
+            {#if filters.booleanTagNames.includes(boolFilter.tagName)}
+                <Tag
+                    {boolFilter}
+                    mode="canRemove"
+                    on:clicked={toggleBooleanTag}
+                />
+            {/if}
+        {/each}
+    </div>
+
+    <span class="bold">Add a filter</span>
+    <div class="horizontal-flex">
+        {#each allBooleanFilters as boolFilter}
+            {#if !filters.booleanTagNames.includes(boolFilter.tagName)}
+                <Tag {boolFilter} mode="canAdd" on:clicked={toggleBooleanTag} />
+            {/if}
+        {/each}
     </div>
 </div>
 
@@ -35,7 +63,7 @@
 
         display: flex;
         flex-direction: column;
-        gap: 5px;
+        gap: 10px;
     }
 
     input {
@@ -44,5 +72,16 @@
 
     input#search {
         width: 300px;
+    }
+
+    .horizontal-flex {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        align-items: baseline;
+    }
+
+    .bold {
+        font-weight: bold;
     }
 </style>
