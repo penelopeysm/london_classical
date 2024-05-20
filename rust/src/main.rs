@@ -43,13 +43,13 @@ fn display_programme(concert: &Concert) {
 
 #[tokio::main]
 async fn main() {
-    use london_classical::wigmore;
+    use london_classical::proms;
     let client = reqwest::Client::new();
-    let concerts = wigmore::get_api(&client).await;
 
-    // TODO: Fetch all concerts, not just the first N. (Don't want to spam Wigmore's servers too
-    // much)
-    let mut full_concerts = stream::iter(&concerts[..40])
+    use london_classical::wigmore;
+    // Fetch Wigmore concerts
+    let wigmore_intermediate_concerts = wigmore::get_api(&client).await;
+    let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..40])
         .map(|concert| wigmore::get_concert(&concert, &client))
         .buffer_unordered(10)
         .collect::<Vec<Option<core::Concert>>>()
@@ -57,6 +57,15 @@ async fn main() {
         .into_iter()
         .flatten()
         .collect::<Vec<core::Concert>>();
+
+    // Fetch Proms
+    let mut proms_concerts = proms::scrape("https://www.bbc.co.uk/events/rfbp5v/series", &client)
+        .await;
+
+    // Concatenate and sort
+    let mut full_concerts = vec![];
+    full_concerts.append(&mut wigmore_concerts);
+    full_concerts.append(&mut proms_concerts);
     full_concerts.sort_by_key(|concert| concert.datetime);
 
     create_dir_all("../src/assets").unwrap();

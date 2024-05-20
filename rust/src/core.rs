@@ -22,10 +22,12 @@ pub struct Concert {
     pub title: String,
     pub subtitle: Option<String>,
     pub description: Option<String>,
-    pub is_wigmore_u35: bool,
     pub programme_pdf_url: Option<String>,
     pub pieces: Vec<Piece>,
     pub venue: String,
     pub min_price: Option<u32>, // pennies
     pub max_price: Option<u32>, // pennies
+
+    pub is_wigmore_u35: bool,
+    pub is_prom: bool,
 }

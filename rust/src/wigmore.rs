@@ -224,6 +224,7 @@ fn parse_concert_json(
         pieces,
         min_price,
         max_price,
+        is_prom: false,
     }
 }
 
