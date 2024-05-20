@@ -23,6 +23,16 @@ export const allBooleanFilters: BooleanFilter[] = [
         tagName: "Wigmore Hall",
         tagColor: "#17a8ad",
         filterFunc: (concert: Concert) => concert.venue === "Wigmore Hall",
+    },
+    {
+        tagName: "BBC Proms",
+        tagColor: "#c462f5",
+        filterFunc: (concert: Concert) => concert.is_prom,
+    },
+    {
+        tagName: "Royal Albert Hall",
+        tagColor: "#c72ac2",
+        filterFunc: (concert: Concert) => concert.venue === "Royal Albert Hall",
     }
 ];
 
