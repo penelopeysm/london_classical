@@ -124,7 +124,7 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
             .text()
             .next()
             .map(|s| s.trim().to_string()),
-        url: "https://bbc.co.uk/".to_string()
+        url: "https://bbc.co.uk".to_string()
             + elem
                 .select(&Selector::parse("div.ev-event-calendar__name>a").unwrap())
                 .next()
