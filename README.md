@@ -1,6 +1,7 @@
 # london-classical
 
 Website which aggregates (some) classical music concerts in London.
+View online at: https://penelopeysm.github.io/london_classical/
 
 This is done by scraping the websites of various venues and aggregating the data into a single page.
 The scraping is done with a small Rust application, located in the `rust` subdirectory.
