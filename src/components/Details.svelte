@@ -1,6 +1,6 @@
 <script lang="ts">
     import { type HashedConcert } from "src/utils";
-    import SelectedConcertDetails from "src/lib/SelectedConcertDetails.svelte";
+    import SelectedConcertDetails from "src/components/SelectedConcertDetails.svelte";
 
     export let selectedConcerts: HashedConcert[];
 

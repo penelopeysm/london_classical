@@ -1,9 +1,8 @@
 <script lang="ts">
-    import Title from "src/lib/Title.svelte";
-    import Filters from "src/lib/Filters.svelte";
-    import Overview from "src/lib/Overview.svelte";
-    import Details from "src/lib/Details.svelte";
-    import { type Concert } from "src/lib/bindings/Concert";
+    import Title from "src/components/Title.svelte";
+    import Filters from "src/components/Filters.svelte";
+    import Overview from "src/components/Overview.svelte";
+    import Details from "src/components/Details.svelte";
     import { type HashedConcert, hashConcert } from "src/utils";
     import { type FiltersType, satisfies } from "src/lib/filters";
 
@@ -31,11 +30,13 @@
     <main>
         <div class="top">
             <Title />
-            <Filters bind:filters />
         </div>
         <div class="bottom">
             <Overview concerts={concertsToShow} bind:selectedConcertHashes />
-            <Details bind:selectedConcerts />
+            <div class="bottom-right">
+                <Filters bind:filters />
+                <Details bind:selectedConcerts />
+            </div>
         </div>
     </main>
 </body>
@@ -52,7 +53,7 @@
     main {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 0px;
         align-items: center;
 
         width: 80%;
@@ -71,9 +72,19 @@
     div.bottom {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 30px;
+        gap: 20px;
         width: 100%;
         min-height: 0; /* So confusing that this is required */
+        max-height: 100%;
+    }
+
+    div.bottom-right {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         max-height: 100%;
     }
 </style>

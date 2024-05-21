@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Tags from "src/lib/Tags.svelte";
+    import Tags from "src/components/Tags.svelte";
     import { type HashedConcert, formatDate, getPriceString } from "src/utils";
 
     export let concerts: HashedConcert[];
@@ -81,7 +81,6 @@
     .active {
         border-color: #a6628f;
         background-color: #f5e9f1;
-        margin-left: 15px;
     }
 
     .concert > * {

@@ -15,14 +15,14 @@ export type BooleanFilter = {
 // List of all boolean filters that we know of
 export const allBooleanFilters: BooleanFilter[] = [
     {
-        tagName: "Wigmore U35 £5",
-        tagColor: "#3694cf",
-        filterFunc: (concert: Concert) => concert.is_wigmore_u35,
-    },
-    {
         tagName: "Wigmore Hall",
         tagColor: "#17a8ad",
         filterFunc: (concert: Concert) => concert.venue === "Wigmore Hall",
+    },
+    {
+        tagName: "Wigmore U35 £5",
+        tagColor: "#3694cf",
+        filterFunc: (concert: Concert) => concert.is_wigmore_u35,
     },
     {
         tagName: "BBC Proms",

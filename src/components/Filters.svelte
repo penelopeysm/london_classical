@@ -1,6 +1,6 @@
 <script lang="ts">
     import { type FiltersType, allBooleanFilters } from "src/lib/filters";
-    import Tag from "src/lib/Tag.svelte";
+    import Tag from "src/components/Tag.svelte";
 
     export let filters: FiltersType;
 
@@ -23,9 +23,8 @@
 </script>
 
 <div class="filters">
-    <span class="bold">Currently filtering by</span>
+    <h3>Filter concerts...</h3>
     <div class="horizontal-flex">
-
         <input
             id="search"
             type="text"
@@ -54,8 +53,13 @@
 </div>
 
 <style>
+    h3 {
+        margin: 0;
+    }
+
     .filters {
         width: 100%;
+        max-width: 100%;
         background-color: #f0f0f0;
         padding: 10px;
         border-radius: 0.5rem;
@@ -77,6 +81,7 @@
     .horizontal-flex {
         display: flex;
         flex-direction: row;
+        flex-wrap: wrap;
         gap: 5px;
         align-items: baseline;
     }

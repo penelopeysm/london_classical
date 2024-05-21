@@ -1,7 +1,7 @@
 <script lang="ts">
     import { type Concert } from "src/lib/bindings/Concert";
-    import { type BooleanFilter, allBooleanFilters } from "src/lib/filters";
-    import Tag from "src/lib/Tag.svelte";
+    import { allBooleanFilters } from "src/lib/filters";
+    import Tag from "src/components/Tag.svelte";
 
     export let concert: Concert;
 </script>

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Tags from "src/lib/Tags.svelte";
+    import Tags from "src/components/Tags.svelte";
     import { type HashedConcert, formatDate, getPriceString } from "src/utils";
 
     export let selectedConcert: HashedConcert;
