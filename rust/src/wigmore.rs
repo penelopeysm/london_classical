@@ -1,19 +1,42 @@
 use crate::core;
 use chrono::{DateTime, Utc};
 use futures::future::join_all;
+use futures::stream::{self, StreamExt};
 use html_escape::decode_html_entities;
 use regex::Regex;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct WigmoreFrontPageConcert {
-    pub datetime: DateTime<Utc>,
-    pub url: String,
-    pub title: String,
-    pub subtitle: Option<String>,
+/// Fetch full data for all Wigmore concerts
+pub async fn get_concerts(client: &reqwest::Client) -> Vec<core::Concert> {
+    let wigmore_intermediate_concerts = get_api(&client).await;
+
+    let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..40])
+        .map(|concert| get_full_concert(&concert, &client))
+        .buffer_unordered(10)
+        .collect::<Vec<Option<core::Concert>>>()
+        .await
+        .into_iter()
+        .flatten()
+        .collect::<Vec<core::Concert>>();
+
+    wigmore_concerts.sort_by_key(|concert| concert.datetime);
+    wigmore_concerts
 }
 
+/// Intermediate struct to hold concert data from the Wigmore Hall front page. This struct does not
+/// contain all the information we need. To get the remainder of the information we need to perform
+/// a separate API query.
+#[derive(Debug, Serialize, Deserialize)]
+struct WigmoreFrontPageConcert {
+    datetime: DateTime<Utc>,
+    url: String,
+    title: String,
+    subtitle: Option<String>,
+}
+
+/// Retrieve a list of all upcoming concerts via the Wigmore Hall API. This function only returns
+/// front-page information, which does not include full details.
 async fn get_api_page(
     client: &reqwest::Client,
     page_number: u64,
@@ -27,6 +50,7 @@ async fn get_api_page(
     (concerts, json["totalPages"].as_u64().unwrap())
 }
 
+/// Parse the JSON response from the Wigmore Hall API
 fn parse_api(json_items: &Vec<serde_json::Value>) -> Vec<WigmoreFrontPageConcert> {
     let mut concerts = Vec::new();
 
@@ -55,7 +79,7 @@ fn parse_api(json_items: &Vec<serde_json::Value>) -> Vec<WigmoreFrontPageConcert
 }
 
 /// Retrieve all upcoming concerts via the Wigmore Hall API
-pub async fn get_api(client: &reqwest::Client) -> Vec<WigmoreFrontPageConcert> {
+async fn get_api(client: &reqwest::Client) -> Vec<WigmoreFrontPageConcert> {
     let mut concerts = Vec::new();
 
     // Scrape the first page and determine how many pages there are
@@ -70,13 +94,11 @@ pub async fn get_api(client: &reqwest::Client) -> Vec<WigmoreFrontPageConcert> {
         .flatten()
         .collect();
     concerts.extend(remaining_concerts);
-
-    concerts.sort_by_key(|concert| concert.datetime);
     concerts
 }
 
 /// Retrieve details of an individual concert by scraping the URL
-pub async fn get_concert(
+async fn get_full_concert(
     fp_entry: &WigmoreFrontPageConcert,
     client: &reqwest::Client,
 ) -> Option<core::Concert> {
@@ -114,8 +136,6 @@ fn parse_concert_json(
     fp_entry: &WigmoreFrontPageConcert,
     json: serde_json::Value,
 ) -> core::Concert {
-    // println!("{}", serde_json::to_string_pretty(&json).unwrap());
-
     // Parse repertoire
     let mut pieces = Vec::new();
     let opt_repertoire = json["data"]["page"]["repertoire"].as_array();
@@ -227,66 +247,3 @@ fn parse_concert_json(
         is_prom: false,
     }
 }
-
-/// This function scrapes the Wigmore Hall website to get concerts. As it turns out, Wigmore Hall
-/// provides a public REST API which is much less fragile. This code is kept here in case the API
-/// is ever removed.
-/// {{{1
-#[allow(dead_code)]
-async fn scrape() {
-    let client = reqwest::Client::new();
-    let html: String = client
-        .get("https://wigmore-hall.org.uk/whats-on/")
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
-    let doc: Html = Html::parse_document(&html);
-
-    let selector: Selector =
-        Selector::parse("section[aria-label=\"Performances by date\"]").unwrap();
-    let date_group_selector = Selector::parse("div.bg-white.col-12.sm-pb3").unwrap();
-
-    // TODO: Parse dates, etc. into Concert struct (or a pre-struct)
-    for perf_section in doc.select(&selector) {
-        println!("found performance section!");
-        for date_group in perf_section.select(&date_group_selector) {
-            // Get date
-            let date_h3_selector = Selector::parse("div > h3").unwrap();
-            let date_h3 = date_group.select(&date_h3_selector).next().unwrap();
-            println!("found date: {:?}", date_h3.inner_html());
-            // Get concerts on that date
-            let concert_selector = Selector::parse("article.px5.py6").unwrap();
-            for concert in date_group.select(&concert_selector) {
-                let url_selector = Selector::parse("a.black.text-decoration-reset").unwrap();
-                let url_relative = concert
-                    .select(&url_selector)
-                    .next()
-                    .unwrap()
-                    .value()
-                    .attr("href")
-                    .unwrap();
-                let url: String = format!("https://wigmore-hall.org.uk{}", url_relative);
-                let artist_selector =
-                    Selector::parse("div.type-style-3.sm-type-style-4.pb4.sm-pb0.sm-pr9.md-pr5")
-                        .unwrap();
-                let artist = concert
-                    .select(&artist_selector)
-                    .next()
-                    .unwrap()
-                    .inner_html();
-                let title_selector = Selector::parse("div.type-style-5.hide.pt5.md-hide").unwrap();
-                let title = concert
-                    .select(&title_selector)
-                    .next()
-                    .map(|node| node.inner_html());
-                println!("found concert: {:?} by {}\n  url: {}", title, artist, url);
-            }
-        }
-    }
-}
-// }}}1
-
-// vim: fdm=marker

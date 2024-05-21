@@ -1,6 +1,5 @@
 use chrono::{DateTime, TimeZone, Utc};
 use chrono_tz::Europe::London;
-use futures::stream::{self, StreamExt};
 use london_classical::core;
 use serde::Serialize;
 use std::fs::{create_dir_all, File};
@@ -47,20 +46,13 @@ async fn main() {
     let client = reqwest::Client::new();
 
     use london_classical::wigmore;
+
     // Fetch Wigmore concerts
-    let wigmore_intermediate_concerts = wigmore::get_api(&client).await;
-    let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..40])
-        .map(|concert| wigmore::get_concert(&concert, &client))
-        .buffer_unordered(10)
-        .collect::<Vec<Option<core::Concert>>>()
-        .await
-        .into_iter()
-        .flatten()
-        .collect::<Vec<core::Concert>>();
+    let mut wigmore_concerts = wigmore::get_concerts(&client).await;
 
     // Fetch Proms
-    let mut proms_concerts = proms::scrape("https://www.bbc.co.uk/events/rfbp5v/series", &client)
-        .await;
+    let mut proms_concerts =
+        proms::scrape("https://www.bbc.co.uk/events/rfbp5v/series", &client).await;
 
     // Concatenate and sort
     let mut full_concerts = vec![];

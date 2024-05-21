@@ -33,9 +33,14 @@ pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::Concert> {
     return concerts;
 }
 
+/// Intermediate struct which contains information about a single concert entry. This does not
+/// contain the date because of the way information is grouped on the BBC Proms webpage: concerts
+/// on the same date are grouped together, so the date information is parsed separately and then
+/// joined together with this to form the full core::Concert.
 #[derive(Debug)]
 struct PromsConcertMetadata {
-    london_time: (u32, u32), // (hour, minute) in London timezone
+    /// (hour, minute) in London timezone
+    london_time: (u32, u32),
     title: String,
     description: Option<String>,
     venue: String,
@@ -44,6 +49,7 @@ struct PromsConcertMetadata {
     performers: Vec<core::Performer>,
 }
 
+/// Scrapes a single date's worth of concerts from the BBC Proms website
 async fn scrape_one_date(date_fragment: ElementRef<'_>) -> (NaiveDate, Vec<PromsConcertMetadata>) {
     let date_selector = Selector::parse("h3.ev-event-calendar__date").unwrap();
     let date_str = date_fragment
@@ -69,6 +75,7 @@ async fn scrape_one_date(date_fragment: ElementRef<'_>) -> (NaiveDate, Vec<Proms
     (date, intermediate_concerts)
 }
 
+/// Parses a single concert entry within a date fragment
 fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
     let time_string: &str = elem
         .select(&Selector::parse("div.ev-event-calendar__time").unwrap())
@@ -149,6 +156,7 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
     concert
 }
 
+/// Combines the date and the concert metadata to form a full core::Concert
 fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::Concert {
     let naive_datetime = date
         .and_hms_opt(metadata.london_time.0, metadata.london_time.1, 0)
@@ -174,6 +182,7 @@ fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::C
     }
 }
 
+/// Helper function to parse a piece from a concert
 fn parse_piece(piece_elem: ElementRef<'_>) -> Option<core::Piece> {
     // This is kind of hacky but it works
     let all_texts = piece_elem.text().collect::<Vec<&str>>();
@@ -188,6 +197,7 @@ fn parse_piece(piece_elem: ElementRef<'_>) -> Option<core::Piece> {
     }
 }
 
+/// Helper function to parse a performer from a concert
 fn parse_performer(performer_elem: ElementRef<'_>) -> core::Performer {
     let name = performer_elem
         .select(&Selector::parse("div.ev-act-schedule__artist-details-container").unwrap())
