@@ -1,4 +1,5 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, TimeZone};
+use chrono_tz::Europe::London;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -33,4 +34,9 @@ pub struct Concert {
 
     pub is_wigmore_u35: bool,
     pub is_prom: bool,
+}
+
+pub fn report_concert(c: &Concert) -> () {
+    let london_datetime = c.datetime.with_timezone(&London);
+    eprintln!("Found concert on {}: {}", london_datetime, c.title);
 }

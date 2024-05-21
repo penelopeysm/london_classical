@@ -1,10 +1,16 @@
 use crate::core;
 use chrono::{NaiveDate, TimeZone, Utc};
 use chrono_tz::Europe::London;
+use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
+use std::cmp::min;
 
 // Scrapes concerts from BBC Proms website
 pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::Concert> {
+    println!("----------------------------------------");
+    println!("Scraping BBC Proms from URL: {}", url);
+    println!("----------------------------------------");
+
     let html: String = client
         .get(url)
         // it 500's with default user-agent
@@ -47,6 +53,8 @@ struct PromsConcertMetadata {
     url: String,
     pieces: Vec<core::Piece>,
     performers: Vec<core::Performer>,
+    min_price: Option<u32>,
+    max_price: Option<u32>,
 }
 
 /// Scrapes a single date's worth of concerts from the BBC Proms website
@@ -62,7 +70,6 @@ async fn scrape_one_date(date_fragment: ElementRef<'_>) -> (NaiveDate, Vec<Proms
         .trim();
     // BBC's website reports dates as e.g. "Fri 23 Aug 2024"
     let date = NaiveDate::parse_from_str(date_str, "%a %e %b %Y").unwrap();
-    println!("parsed {date_str} into date: {:?}", date);
 
     // Get the concerts themselves
     let mut intermediate_concerts: Vec<PromsConcertMetadata> = vec![];
@@ -113,7 +120,31 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
         .map(|performer_elem| parse_performer(performer_elem))
         .collect();
 
-    let concert = PromsConcertMetadata {
+    let price_selector =
+        Selector::parse("div.ev-event-calendar__ticket-link-subtitle--desktop").unwrap();
+    let price_text = elem
+        .select(&price_selector)
+        .next()
+        .unwrap()
+        .text()
+        .next()
+        .unwrap()
+        .trim();
+    // Regexes are hacky, but it works fine for now ... otherwise the website text is very
+    // inconsistent and hard to parse.
+    let price_re = Regex::new(r"£(\d+)").unwrap();
+    let prices: Vec<u32> = price_re
+        .captures_iter(price_text)
+        .map(|cap| cap.get(1).unwrap().as_str().parse().unwrap())
+        .collect();
+    let (min_price, max_price) = match prices[..] {
+        [] => (None, None),
+        [price] => (Some(price * 100), Some(price * 100)),
+        [min_price, max_price] => (Some(min_price * 100), Some(max_price * 100)),
+        _ => panic!("couldn't parse prices from {:?}", price_text),
+    };
+
+    PromsConcertMetadata {
         london_time: parsed_time,
         title: elem
             .select(&Selector::parse("div.ev-event-calendar__name").unwrap())
@@ -149,11 +180,9 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
             .to_string(),
         pieces,
         performers,
-    };
-
-    println!("found concert: {:?}", concert);
-
-    concert
+        min_price,
+        max_price,
+    }
 }
 
 /// Combines the date and the concert metadata to form a full core::Concert
@@ -163,7 +192,11 @@ fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::C
         .unwrap();
     let tz_datetime = London.from_local_datetime(&naive_datetime).unwrap();
 
-    core::Concert {
+    let is_rah_prom = metadata.venue == "Royal Albert Hall"
+        && (metadata.title.starts_with("Prom") || metadata.title.starts_with("First Night"));
+    let promming_price = 800;
+
+    let concert = core::Concert {
         datetime: tz_datetime.with_timezone(&Utc),
         url: metadata.url,
         venue: metadata.venue,
@@ -172,22 +205,34 @@ fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::C
         pieces: metadata.pieces,
         performers: metadata.performers,
 
+        // Proms concerts don't have subtitles or programme PDFs available
         subtitle: None,
         programme_pdf_url: None,
-        min_price: Some(800),
-        max_price: Some(800),
 
+        // Day promming prices aren't shown on the website so we add them in here
+        min_price: if is_rah_prom {
+            match metadata.min_price {
+                Some(price) => Some(min(price, promming_price)),
+                None => Some(promming_price),
+            }
+        } else {
+            metadata.min_price
+        },
+        max_price: metadata.max_price,
+
+        // By definition
         is_wigmore_u35: false,
         is_prom: true,
-    }
+    };
+
+    core::report_concert(&concert);
+    concert
 }
 
 /// Helper function to parse a piece from a concert
 fn parse_piece(piece_elem: ElementRef<'_>) -> Option<core::Piece> {
     // This is kind of hacky but it works
     let all_texts = piece_elem.text().collect::<Vec<&str>>();
-    println!("all_texts: {:?}", all_texts);
-
     match all_texts[..] {
         ["interval"] => None,
         _ => Some(core::Piece {
@@ -212,9 +257,6 @@ fn parse_performer(performer_elem: ElementRef<'_>) -> core::Performer {
         .unwrap()
         .text()
         .collect::<Vec<&str>>();
-
-    println!("found performer: {} ({:?})", name, role_texts);
-
     core::Performer {
         name: name.to_string(),
         instrument: match &role_texts[..] {

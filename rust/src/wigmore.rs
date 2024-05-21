@@ -9,6 +9,10 @@ use serde::{Deserialize, Serialize};
 
 /// Fetch full data for all Wigmore concerts
 pub async fn get_concerts(client: &reqwest::Client) -> Vec<core::Concert> {
+    println!("----------------------------------------");
+    println!("Scraping Wigmore Hall concerts");
+    println!("----------------------------------------");
+
     let wigmore_intermediate_concerts = get_api(&client).await;
 
     let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..40])
@@ -102,8 +106,6 @@ async fn get_full_concert(
     fp_entry: &WigmoreFrontPageConcert,
     client: &reqwest::Client,
 ) -> Option<core::Concert> {
-    eprintln!("Scraping concert at {}", fp_entry.url);
-
     // Wigmore's website actually seems to give us all the data in JSON format, but curiously, it's
     // in a script tag in the HTML. Not complaining though as it is still so much easier than
     // parsing the HTML itself.
@@ -227,7 +229,7 @@ fn parse_concert_json(
         cleaned
     }
 
-    core::Concert {
+    let concert = core::Concert {
         datetime: fp_entry.datetime,
         url: fp_entry.url.clone(),
         title: fp_entry.title.clone(),
@@ -245,5 +247,8 @@ fn parse_concert_json(
         min_price,
         max_price,
         is_prom: false,
-    }
+    };
+
+    core::report_concert(&concert);
+    concert
 }
