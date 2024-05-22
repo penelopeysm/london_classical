@@ -37,7 +37,7 @@ export const allBooleanFilters: BooleanFilter[] = [
 ];
 
 // Check if a concert satisfies the filters
-export function satisfies(concert: Concert, filters: FiltersType): boolean {
+function satisfies(concert: Concert, filters: FiltersType): boolean {
     // Check search filter
     let ciSearchTerm = filters.searchTerm.toLowerCase();
     let searchPass =
@@ -64,3 +64,17 @@ export function satisfies(concert: Concert, filters: FiltersType): boolean {
     return searchPass && booleanPass;
 }
 
+export function getPassingIndices(concerts: Concert[], filters: FiltersType): number[] {
+    let passingIndices: number[] = [];
+    concerts.forEach((concert, i) => {
+        if (satisfies(concert, filters)) {
+            passingIndices.push(i);
+        }
+    });
+    return passingIndices;
+}
+
+export const initialFilters: FiltersType = {
+    searchTerm: "",
+    booleanTagNames: [],
+};

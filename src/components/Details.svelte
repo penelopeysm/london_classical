@@ -1,24 +1,30 @@
 <script lang="ts">
-    import { type HashedConcert } from "src/utils";
+    import { type Concert } from "src/lib/bindings/Concert";
     import SelectedConcertDetails from "src/components/SelectedConcertDetails.svelte";
+    import {
+        concerts,
+        currentViewName,
+        selectedConcertIndices,
+    } from "src/lib/stores";
 
-    export let selectedConcerts: HashedConcert[];
+    let allConcerts: Concert[] = $concerts.get($currentViewName) as Concert[];
+    let selectedConcerts: Concert[] = allConcerts.filter((_, idx) =>
+        $selectedConcertIndices.includes(idx),
+    );
 
-    let copyButton: HTMLButtonElement;
-    function copyTextToClipboard() {
-        navigator.clipboard.writeText(shareCode);
-        let w = copyButton.offsetWidth;
-        copyButton.style.width = w + "px";
-        copyButton.textContent = "Copied!";
-        setTimeout(() => {
-            copyButton.textContent = "Copy to clipboard";
-            copyButton.style.width = "";
-        }, 1000);
+    $: {
+        allConcerts = $concerts.get($currentViewName) as Concert[];
+        selectedConcerts = allConcerts.filter((_, idx) =>
+            $selectedConcertIndices.includes(idx),
+        );
     }
 
-    let shareCode: string;
-    $: {
-        shareCode = selectedConcerts.map((concert) => concert.hash).join(",");
+    function exportSelection() {
+        alert("TODO: Export selected concerts to file");
+    }
+
+    function makeNewView() {
+        alert("TODO: Create new view with selected concerts");
     }
 </script>
 
@@ -39,22 +45,24 @@
             <div id="selected-concerts-summary">
                 {#each selectedConcerts as concert}
                     <p>
-                        <a href={concert.url}>
+                        <a href={concert.url} target="_blank">
                             {concert.title}
                         </a>
                     </p>
                 {/each}
             </div>
+
             <p>
-                Share this list of concerts with somebody by sending them the
-                text below.
-                (They don't have any way of inputting this code into the website
-                yet, but one day...)
+                Don&rsquo;t click these buttons, they don&rsquo;t do anything
+                yet. You&rsquo;ll just get an annoying popup.
             </p>
-            <p></p>
-            <p class="code">{shareCode}</p>
-            <button bind:this={copyButton} on:click={copyTextToClipboard}>
-                Copy to clipboard
+
+            <button on:click={exportSelection}>
+                TODO: Export selected concerts to file
+            </button>
+
+            <button on:click={makeNewView}>
+                TODO: Create new view with selected concerts
             </button>
         </div>
     {/if}
@@ -93,12 +101,6 @@
 
     .italic {
         font-style: italic;
-    }
-
-    .code {
-        font-family: monospace;
-        width: max-content;
-        max-width: 80%;
     }
 
     button {

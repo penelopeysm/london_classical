@@ -1,21 +1,20 @@
 <script lang="ts">
-    import { type FiltersType, allBooleanFilters } from "src/lib/filters";
+    import { type BooleanFilter, allBooleanFilters } from "src/lib/filters";
     import Tag from "src/components/Tag.svelte";
-
-    export let filters: FiltersType;
+    import { filters } from "src/lib/stores";
 
     function toggleBooleanTag(
         event: CustomEvent<{ boolFilter: BooleanFilter }>,
     ) {
         const { boolFilter } = event.detail;
 
-        if (filters.booleanTagNames.includes(boolFilter.tagName)) {
-            filters.booleanTagNames = filters.booleanTagNames.filter(
+        if ($filters.booleanTagNames.includes(boolFilter.tagName)) {
+            $filters.booleanTagNames = $filters.booleanTagNames.filter(
                 (tagName) => tagName !== boolFilter.tagName,
             );
         } else {
-            filters.booleanTagNames = [
-                ...filters.booleanTagNames,
+            $filters.booleanTagNames = [
+                ...$filters.booleanTagNames,
                 boolFilter.tagName,
             ];
         }
@@ -29,10 +28,10 @@
             id="search"
             type="text"
             placeholder="Search for a composer, performer, etc."
-            bind:value={filters.searchTerm}
+            bind:value={$filters.searchTerm}
         />
         {#each allBooleanFilters as boolFilter}
-            {#if filters.booleanTagNames.includes(boolFilter.tagName)}
+            {#if $filters.booleanTagNames.includes(boolFilter.tagName)}
                 <Tag
                     {boolFilter}
                     mode="canRemove"
@@ -45,7 +44,7 @@
     <span class="bold">Add a filter</span>
     <div class="horizontal-flex">
         {#each allBooleanFilters as boolFilter}
-            {#if !filters.booleanTagNames.includes(boolFilter.tagName)}
+            {#if !$filters.booleanTagNames.includes(boolFilter.tagName)}
                 <Tag {boolFilter} mode="canAdd" on:clicked={toggleBooleanTag} />
             {/if}
         {/each}

@@ -1,89 +1,39 @@
 <script lang="ts">
-    import Tags from "src/components/Tags.svelte";
-    import { type HashedConcert, formatDate, getPriceString } from "src/utils";
+    import { type Concert } from "src/lib/bindings/Concert";
+    import ConcertList from "src/components/ConcertList.svelte";
+    import ViewList from "src/components/ViewList.svelte";
+    import {
+        concerts,
+        filters,
+        currentViewName,
+        selectedConcertIndices,
+    } from "src/lib/stores";
+    import { getPassingIndices } from "src/lib/filters";
 
-    export let concerts: HashedConcert[];
-    export let selectedConcertHashes: string[];
+    let allConcerts: Concert[] = $concerts.get($currentViewName) as Concert[];
+    let shownIndices: number[] = getPassingIndices(allConcerts, $filters);
 
-    // Event handler when a concert is clicked. The behaviour is chosen to
-    // provide as intuitive a UI as possible
-    function addOrRemove(event: MouseEvent, hash: string) {
-        if (selectedConcertHashes.includes(hash)) {
-            if (event.shiftKey) {
-                selectedConcertHashes = selectedConcertHashes.filter(
-                    (h) => h !== hash,
-                );
-            } else {
-                if (selectedConcertHashes.length === 1) {
-                    selectedConcertHashes = [];
-                } else {
-                    selectedConcertHashes = [hash];
-                }
-            }
-        } else {
-            if (event.shiftKey) {
-                selectedConcertHashes = [...selectedConcertHashes, hash];
-            } else {
-                selectedConcertHashes = [hash];
-            }
-        }
+    $: {
+        // Calculate the indices of the concerts that should be shown
+        allConcerts = $concerts.get($currentViewName) as Concert[];
+        shownIndices = getPassingIndices(allConcerts, $filters);
+        // Clear selected concerts when filters are changed (or allConcerts for that matter)
+        $selectedConcertIndices = [];
     }
 </script>
 
 <div class="overview">
-    {#each concerts as concert}
-        <button
-            class="concert"
-            class:active={selectedConcertHashes.includes(concert.hash)}
-            class:wigmoreU35={concert.is_wigmore_u35}
-            on:click={(event) => addOrRemove(event, concert.hash)}
-        >
-            <Tags {concert} />
-            <h3>{concert.title}</h3>
-            {#if concert.subtitle !== null}
-                <h4>{concert.subtitle}</h4>
-            {/if}
-            <p>
-                {formatDate(new Date(concert.datetime))}
-                |
-                {getPriceString(concert)}
-            </p>
-        </button>
-    {/each}
+    <ViewList bind:allConcerts bind:shownIndices />
+    <ConcertList bind:allConcerts bind:shownIndices />
 </div>
 
 <style>
-    .overview {
+    div.overview {
         display: flex;
         flex-direction: column;
         gap: 10px;
-        width: 100%;
+        min-height: 0;
         height: 100%;
-        overflow-y: auto;
-        padding: 0 15px 0 0;
-    }
-
-    .concert {
-        border: 2px solid #666;
-        padding: 10px;
-        border-radius: 5px;
-        width: 100%;
-
-        font-family: inherit;
-        text-align: left;
-        cursor: pointer;
-
-        transition: border-color 0.3s;
-        transition: background-color 0.3s;
-        transition: margin-left 0.3s;
-    }
-
-    .active {
-        border-color: #a6628f;
-        background-color: #f5e9f1;
-    }
-
-    .concert > * {
-        margin: 2px 0;
+        max-height: 100%;
     }
 </style>
