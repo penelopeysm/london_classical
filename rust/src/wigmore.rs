@@ -13,10 +13,10 @@ pub async fn get_concerts(client: &reqwest::Client) -> Vec<core::Concert> {
     println!("Scraping Wigmore Hall concerts");
     println!("----------------------------------------");
 
-    let wigmore_intermediate_concerts = get_api(&client).await;
+    let wigmore_intermediate_concerts = get_api(client).await;
 
     let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..40])
-        .map(|concert| get_full_concert(&concert, &client))
+        .map(|concert| get_full_concert(concert, client))
         .buffer_unordered(10)
         .collect::<Vec<Option<core::Concert>>>()
         .await
@@ -50,7 +50,7 @@ async fn get_api_page(
         page_number
     );
     let json: serde_json::Value = client.get(url).send().await.unwrap().json().await.unwrap();
-    let concerts = parse_api(&json["items"].as_array().unwrap());
+    let concerts = parse_api(json["items"].as_array().unwrap());
     (concerts, json["totalPages"].as_u64().unwrap())
 }
 
@@ -94,8 +94,7 @@ async fn get_api(client: &reqwest::Client) -> Vec<WigmoreFrontPageConcert> {
     let remaining_concerts: Vec<WigmoreFrontPageConcert> = join_all(futures)
         .await
         .into_iter()
-        .map(|(concerts, _)| concerts)
-        .flatten()
+        .flat_map(|(concerts, _)| concerts)
         .collect();
     concerts.extend(remaining_concerts);
     concerts
@@ -158,9 +157,8 @@ fn parse_concert_json(
                     .and_then(|arr| arr[0]["title"].as_str())
                     .or(Some(""))
                     .map(|s| decode_html_entities(s).to_string());
-                match (opt_title, opt_composer) {
-                    (Some(title), Some(composer)) => pieces.push(core::Piece { title, composer }),
-                    _ => (),
+                if let (Some(title), Some(composer)) = (opt_title, opt_composer) {
+                    pieces.push(core::Piece { title, composer });
                 }
             }
         }
@@ -182,12 +180,11 @@ fn parse_concert_json(
             for credit in credits {
                 let opt_artist_name = credit["artist"]["title"].as_str().map(decode_html_entities);
                 let opt_role = credit["role"].as_str().map(decode_html_entities);
-                match (opt_artist_name, opt_role) {
-                    (Some(artist_name), Some(role)) => performers.push(core::Performer {
+                if let (Some(artist_name), Some(role)) = (opt_artist_name, opt_role) {
+                    performers.push(core::Performer {
                         name: artist_name.to_string(),
                         instrument: Some(role.to_string()),
-                    }),
-                    _ => (),
+                    });
                 }
             }
         }

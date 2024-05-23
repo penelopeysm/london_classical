@@ -1,24 +1,21 @@
-use chrono::{DateTime, Utc, TimeZone};
+use chrono::{DateTime, Utc};
 use chrono_tz::Europe::London;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 #[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Piece {
     pub composer: String,
     pub title: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Performer {
     pub name: String,
     pub instrument: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Concert {
     pub datetime: DateTime<Utc>,
     pub url: String,
@@ -36,7 +33,7 @@ pub struct Concert {
     pub is_prom: bool,
 }
 
-pub fn report_concert(c: &Concert) -> () {
+pub fn report_concert(c: &Concert) {
     let london_datetime = c.datetime.with_timezone(&London);
     eprintln!("Found concert on {}: {}", london_datetime, c.title);
 }

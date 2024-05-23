@@ -36,7 +36,7 @@ pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::Concert> {
             .for_each(|concert| concerts.push(concert));
     }
 
-    return concerts;
+    concerts
 }
 
 /// Intermediate struct which contains information about a single concert entry. This does not
@@ -107,8 +107,7 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
         Selector::parse("li.ev-act-schedule__performance-composer-segments").unwrap();
     let pieces: Vec<core::Piece> = elem
         .select(&pieces_selector)
-        .map(|piece_elem| parse_piece(piece_elem))
-        .filter_map(|x| x)
+        .filter_map(parse_piece)
         .collect();
 
     let performer_selector = Selector::parse(

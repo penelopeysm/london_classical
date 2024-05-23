@@ -1,2 +1,2 @@
 types:
-	cargo test && rm -r ../src/lib/bindings && mv bindings ../src/lib
+	cargo run --bin export-types
