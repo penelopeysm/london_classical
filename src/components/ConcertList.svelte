@@ -2,43 +2,44 @@
     import Tags from "src/components/Tags.svelte";
     import { type Concert } from "src/lib/bindings/Concert";
     import { formatDate, getPriceString } from "src/lib/utils";
-    import { selectedConcertIndices } from "src/lib/stores";
+    import { concertViews, selectedConcertIds } from "src/lib/stores";
+    import { notUndefined } from "src/lib/utils";
 
     export let allConcerts: Concert[];
-    export let shownIndices: number[];
+    export let shownIds: string[];
 
     // Event handler when a concert is clicked. The behaviour is chosen to
     // provide as intuitive a UI as possible
-    function selectOrDeselect(event: MouseEvent, idx: number) {
-        if ($selectedConcertIndices.includes(idx)) {
+    function selectOrDeselect(event: MouseEvent, id: string) {
+        if ($selectedConcertIds.includes(id)) {
             if (event.shiftKey) {
-                $selectedConcertIndices = $selectedConcertIndices.filter(
-                    (i) => i !== idx,
+                $selectedConcertIds = $selectedConcertIds.filter(
+                    (i) => i !== id,
                 );
             } else {
-                if ($selectedConcertIndices.length === 1) {
-                    $selectedConcertIndices = [];
+                if ($selectedConcertIds.length === 1) {
+                    $selectedConcertIds = [];
                 } else {
-                    $selectedConcertIndices = [idx];
+                    $selectedConcertIds = [id];
                 }
             }
         } else {
             if (event.shiftKey) {
-                $selectedConcertIndices = [...$selectedConcertIndices, idx];
+                $selectedConcertIds = [...$selectedConcertIds, id];
             } else {
-                $selectedConcertIndices = [idx];
+                $selectedConcertIds = [id];
             }
         }
     }
 </script>
 
 <div class="concert-list">
-    {#each shownIndices as idx}
-        {@const concert = allConcerts[idx]}
+    {#each shownIds as id}
+        {@const concert = notUndefined(allConcerts.find((c) => c.id === id))}
         <button
             class="concert"
-            class:active={$selectedConcertIndices.includes(idx)}
-            on:click={(event) => selectOrDeselect(event, idx)}
+            class:active={$selectedConcertIds.includes(id)}
+            on:click={(event) => selectOrDeselect(event, id)}
         >
             <Tags {concert} />
             <h3>{concert.title}</h3>
@@ -68,7 +69,9 @@
         border: 2px solid #666;
         padding: 10px;
         border-radius: 5px;
-        width: calc(100% - 5px); /* Leave some space for scrollbar on some systems */
+        width: calc(
+            100% - 5px
+        ); /* Leave some space for scrollbar on some systems */
 
         font-family: inherit;
         text-align: left;

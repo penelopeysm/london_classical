@@ -64,14 +64,14 @@ function satisfies(concert: Concert, filters: FiltersType): boolean {
     return searchPass && booleanPass;
 }
 
-export function getPassingIndices(concerts: Concert[], filters: FiltersType): number[] {
-    let passingIndices: number[] = [];
-    concerts.forEach((concert, i) => {
+export function getPassingIds(concerts: Concert[], filters: FiltersType): string[] {
+    let passingIds: string[] = [];
+    concerts.forEach((concert) => {
         if (satisfies(concert, filters)) {
-            passingIndices.push(i);
+            passingIds.push(concert.id);
         }
     });
-    return passingIndices;
+    return passingIds;
 }
 
 export const initialFilters: FiltersType = {

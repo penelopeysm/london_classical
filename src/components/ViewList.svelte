@@ -4,7 +4,7 @@
         concertViews,
         filters,
         currentViewName,
-        selectedConcertIndices,
+        selectedConcertIds,
         defaultViewName,
     } from "src/lib/stores";
     import { initialFilters } from "src/lib/filters";
@@ -12,7 +12,7 @@
     import Dropdown from "src/components/Dropdown.svelte";
 
     export let allConcerts: Concert[];
-    export let shownIndices: number[];
+    export let shownIds: string[];
 
     function setViewName(newViewName: string) {
         $currentViewName = newViewName;
@@ -33,7 +33,9 @@
         if (newViewName === null) {
             return;
         }
-        const shownConcerts = shownIndices.map((i) => allConcerts[i]);
+        const shownConcerts = shownIds.map((i) =>
+            allConcerts.find((c) => c.id === i),
+        ) as Concert[];
         $filters = initialFilters;
         $concertViews.set(newViewName, shownConcerts);
         $concertViews = new Map($concertViews); // Required to trigger store update
@@ -45,9 +47,9 @@
         if (newViewName === null) {
             return;
         }
-        const selectedConcerts = $selectedConcertIndices.map(
-            (i) => allConcerts[i],
-        );
+        const selectedConcerts = $selectedConcertIds
+            .map((i) => allConcerts.find((c) => c.id === i))
+            .filter((c) => c !== undefined) as Concert[];
         $filters = initialFilters;
         $concertViews.set(newViewName, selectedConcerts);
         $concertViews = new Map($concertViews); // Required to trigger store update
@@ -133,7 +135,7 @@
         {@const allConcertsLength = notUndefined(
             $concertViews.get(viewName),
         ).length}
-        {@const shownConcertsLength = shownIndices.length}
+        {@const shownConcertsLength = shownIds.length}
         <Dropdown
             hasOptions={viewName !== defaultViewName}
             selected={$currentViewName === viewName}

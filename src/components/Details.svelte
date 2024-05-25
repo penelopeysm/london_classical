@@ -4,7 +4,7 @@
     import {
         concertViews,
         currentViewName,
-        selectedConcertIndices,
+        selectedConcertIds,
         defaultViewName,
     } from "src/lib/stores";
     import Dropdown from "src/components/Dropdown.svelte";
@@ -12,8 +12,8 @@
     let allConcerts: Concert[] = $concertViews.get(
         $currentViewName,
     ) as Concert[];
-    let selectedConcerts: Concert[] = allConcerts.filter((_, idx) =>
-        $selectedConcertIndices.includes(idx),
+    let selectedConcerts: Concert[] = allConcerts.filter((c) =>
+        $selectedConcertIds.includes(c.id),
     );
 
     function compareConcertTime(a: Concert, b: Concert): number {
@@ -61,8 +61,8 @@
 
     $: {
         allConcerts = $concertViews.get($currentViewName) as Concert[];
-        selectedConcerts = allConcerts.filter((_, idx) =>
-            $selectedConcertIndices.includes(idx),
+        selectedConcerts = allConcerts.filter((c) =>
+            $selectedConcertIds.includes(c.id),
         );
     }
 </script>

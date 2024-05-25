@@ -66,7 +66,7 @@ export const concertViews = {
 export const currentViewName: Writable<string> = writable(defaultViewName);
 
 // Indices of selected concerts
-export const selectedConcertIndices: Writable<number[]> = writable([]);
+export const selectedConcertIds: Writable<string[]> = writable([]);
 
 // Store for state of filters. We have to make a copy of initialFilters to avoid
 // mutating it

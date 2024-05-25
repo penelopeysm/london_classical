@@ -22,3 +22,10 @@ export function getPriceString(concert: Concert): string {
     }
     return "Price not available";
 }
+
+export function notUndefined<T>(x: T | undefined): T {
+    if (x === undefined) {
+        throw new Error("Unexpected undefined value");
+    }
+    return x;
+}
