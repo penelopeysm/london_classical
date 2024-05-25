@@ -67,18 +67,14 @@
     div.dropdown-options :global(button) {
         background-color: #f0f0f0;
         border: 1px solid #ccc;
-        border-radius: 5px;
+        border-bottom: none;
         padding: 5px;
         margin: 0;
-        text-align: left;
+        text-align: left;  /* Regardless of alignment, text should always be on left */
     }
 
-    div.dropdown-options.left :global(button) {
-        text-align: left;
-    }
-
-    div.dropdown-options.right :global(button) {
-        text-align: right;
+    div.dropdown-options :global(button:last-child) {
+        border-bottom: 1px solid #ccc;
     }
 
     div.dropdown-options :global(button:hover) {

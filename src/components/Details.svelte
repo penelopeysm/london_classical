@@ -69,7 +69,11 @@
 
 <div class="details">
     {#if selectedConcerts.length === 1}
-        <SelectedConcertDetails selectedConcert={selectedConcerts[0]} />
+        <SelectedConcertDetails
+            selectedConcert={selectedConcerts[0]}
+            on:add={(e) => addToView(e.detail.concerts, e.detail.viewName)}
+            on:addNew={(e) => addToNewView(e.detail.concerts)}
+        />
     {:else if selectedConcerts.length === 0}
         <div id="centred-text">
             <h2>No concert selected</h2>

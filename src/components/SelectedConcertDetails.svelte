@@ -2,7 +2,7 @@
     import Tags from "src/components/Tags.svelte";
     import { formatDate, getPriceString } from "src/lib/utils";
     import { type Concert } from "src/lib/bindings/Concert";
-    import { concertViews, currentViewName } from "src/lib/stores";
+    import { concertViews } from "src/lib/stores";
     import Dropdown from "src/components/Dropdown.svelte";
 
     export let selectedConcert: Concert;
@@ -17,37 +17,14 @@
         return validViews;
     }
 
+    // These are handled in the parent component to avoid code duplication
+    import { createEventDispatcher } from "svelte";
+    const dispatch = createEventDispatcher();
     function addToView(concert: Concert, viewName: string) {
-        const existingConcerts = $concertViews.get(viewName) as Concert[];
-        $concertViews.set(viewName, [...existingConcerts, concert]);
-        $concertViews = new Map($concertViews); // trigger store update
+        dispatch("add", { concerts: [concert], viewName });
     }
-
-    // TODO Reduce duplication with ViewList.svelte
     function addToNewView(concert: Concert) {
-        const newViewName = getNewViewName();
-        if (newViewName === null) {
-            return;
-        }
-        $concertViews.set(newViewName, [concert]);
-        $concertViews = new Map($concertViews); // Required to trigger store update
-        $currentViewName = newViewName;
-    }
-
-    function getNewViewName(): string | null {
-        const newViewName = prompt("Enter a name for the new view");
-        if (newViewName === null) {
-            return null;
-        }
-        if (newViewName === "") {
-            alert("Please enter a name");
-            return null;
-        }
-        if ($concertViews.has(newViewName)) {
-            alert("A view with that name already exists");
-            return null;
-        }
-        return newViewName;
+        dispatch("addNew", { concerts: [concert] });
     }
 </script>
 
