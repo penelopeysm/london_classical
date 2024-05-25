@@ -7,6 +7,7 @@
         selectedConcertIndices,
     } from "src/lib/stores";
     import { initialFilters } from "src/lib/filters";
+    import FileSelector from "src/components/FileSelector.svelte";
 
     export let allConcerts: Concert[];
     export let shownIndices: number[];
@@ -51,6 +52,11 @@
         $currentViewName = newViewName;
     }
 
+    let fileSelectorMode: "select" | "error" | "hidden" = "hidden";
+    function addViewFromJSON() {
+        fileSelectorMode = "select";
+    }
+
     function getNewViewName(): string | null {
         const newViewName = prompt("Enter a name for the new view");
         if (newViewName === null) {
@@ -77,7 +83,30 @@
         let concertIds = notUndefined($concertViews.get(viewName)).map(
             (c) => c.id,
         );
-        console.log(JSON.stringify({ viewName, concerts: concertIds }));
+        const obj: { [viewName: string]: string[] } = {};
+        obj[viewName] = concertIds;
+        const exportJson = JSON.stringify(obj);
+        console.log(exportJson);
+        console.log("Exporting view", viewName);
+
+        const filePickerOpts: SaveFilePickerOptions = {
+            types: [
+                {
+                    description: "concert list",
+                    accept: { "application/json": [".json"] },
+                },
+            ],
+            suggestedName: "concerts.json",
+        };
+        showSaveFilePicker(filePickerOpts)
+            .then((fileHandle) => {
+                console.log("Writing to file", fileHandle.name);
+                return fileHandle.createWritable();
+            })
+            .then((writableStream) => {
+                writableStream.write(exportJson);
+                writableStream.close();
+            });
     }
 
     // Silence type errors
@@ -110,7 +139,7 @@
         {:else}
             <div class="dropdown-trigger">
                 <button
-                    class="view-button add-new-view"
+                    class="view-button dropdown-button"
                     class:active={$currentViewName === viewName}
                     on:click={() => setViewName(viewName)}
                 >
@@ -133,7 +162,7 @@
         {/if}
     {/each}
     <div class="dropdown-trigger">
-        <button class="view-button add-new-view">
+        <button class="view-button dropdown-button">
             Add new view <span class="smol">▼</span>
             <div class="dropdown-options">
                 <button on:click={addEmptyView}>New empty view</button>
@@ -143,10 +172,14 @@
                 <button on:click={addViewFromSelectedConcerts}
                     >... from currently selected concerts</button
                 >
+                <button on:click={addViewFromJSON}
+                    >... from a file upload</button
+                >
             </div>
         </button>
     </div>
 </div>
+<FileSelector bind:mode={fileSelectorMode} />
 
 <style>
     button.view-button {
@@ -162,7 +195,7 @@
     button.active {
         background-color: #c1eaf5;
         border-color: #32aecf;
-        box-shadow: 0 0 3px #32aecf;
+        box-shadow: 0 0 1px #32aecf;
     }
 
     div.view-list {
@@ -172,7 +205,7 @@
         align-items: baseline;
     }
 
-    button.add-new-view {
+    button.dropdown-button {
         position: relative;
     }
 
@@ -180,7 +213,7 @@
         display: none;
     }
 
-    button.add-new-view:hover > div.dropdown-options {
+    button.dropdown-button:hover > div.dropdown-options {
         display: flex;
         flex-direction: column;
         gap: 0px;

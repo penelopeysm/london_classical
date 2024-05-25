@@ -8,32 +8,41 @@ import allConcerts from "src/assets/concerts.json";
 const defaultViewName = "All";
 const localStorageKey = "local_views";
 
+// This function expects { "viewName": ["concertId1", "concertId2", ...], ... }
+export function viewFromJson(viewJson: string): ConcertViews {
+    let views = new Map<string, Concert[]>();
+    for (const [key, values] of Object.entries(JSON.parse(viewJson))) {
+        if (key !== defaultViewName) {
+            let thisViewConcertIds = [...values as string];
+            // Fetch the full concerts from allConcerts
+            const thisViewConcerts = thisViewConcertIds.map((concertId) => {
+                return allConcerts.find((concert) => concert.id === concertId);
+            })
+                .filter((concert) => concert !== undefined && new Date(concert.datetime) > new Date());
+            views.set(key, thisViewConcerts as Concert[]);
+        }
+    }
+    return views;
+}
+
 function loadViewsFromLocalStorage(): ConcertViews {
     const views = localStorage.getItem(localStorageKey);
     let allViews = new Map<string, Concert[]>();
     allViews.set(defaultViewName, allConcerts);
     if (views !== null) {
-        for (const [key, value] of Object.entries(JSON.parse(views))) {
-            if (key !== defaultViewName) {
-                let thisViewConcertIds = JSON.parse(value as string) as string[];
-                // Fetch the full concerts from allConcerts
-                const thisViewConcerts = thisViewConcertIds.map((concertId) => {
-                    return allConcerts.find((concert) => concert.id === concertId);
-                })
-                    .filter((concert) => concert !== undefined && new Date(concert.datetime) > new Date());
-                allViews.set(key, thisViewConcerts as Concert[]);
-            }
+        for (const [key, value] of viewFromJson(views).entries()) {
+            allViews.set(key, value);
         }
     }
     return allViews;
 }
 
 function storeViewsInLocalStorage(views: ConcertViews) {
-    const viewsToStore: { [key: string]: string } = {};
+    const viewsToStore: { [key: string]: string[] } = {};
     for (const [viewName, concerts] of views) {
         if (viewName !== defaultViewName) {
             const concertIds = concerts.map((concert) => concert.id);
-            viewsToStore[viewName] = JSON.stringify(concertIds);
+            viewsToStore[viewName] = concertIds;
         }
     }
     localStorage.setItem(localStorageKey, JSON.stringify(viewsToStore));
