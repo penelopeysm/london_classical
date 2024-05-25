@@ -18,6 +18,7 @@
     div#tags {
         display: flex;
         justify-content: flex-start;
+        flex-wrap: wrap;
         gap: 5px;
         margin-bottom: 5px;
     }

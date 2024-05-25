@@ -5,9 +5,11 @@
         filters,
         currentViewName,
         selectedConcertIndices,
+        defaultViewName,
     } from "src/lib/stores";
     import { initialFilters } from "src/lib/filters";
     import FileSelector from "src/components/FileSelector.svelte";
+    import Dropdown from "src/components/Dropdown.svelte";
 
     export let allConcerts: Concert[];
     export let shownIndices: number[];
@@ -74,9 +76,10 @@
     }
 
     function deleteView(viewName: string) {
+        window.confirm(`Really delete view "${viewName}"?`);
         $concertViews.delete(viewName);
         $concertViews = new Map($concertViews); // Required to trigger store update
-        $currentViewName = "All";
+        $currentViewName = defaultViewName;
     }
 
     function exportView(viewName: string) {
@@ -131,110 +134,49 @@
             $concertViews.get(viewName),
         ).length}
         {@const shownConcertsLength = shownIndices.length}
-        <div class="dropdown-trigger">
-            <button
-                class="view-button dropdown-button"
-                class:active={$currentViewName === viewName}
-                on:click={() => setViewName(viewName)}
-            >
+        <Dropdown
+            hasOptions={viewName !== defaultViewName}
+            selected={$currentViewName === viewName}
+            on:mainButtonClick={() => setViewName(viewName)}
+        >
+            <span slot="text">
                 {#if $currentViewName === viewName && shownConcertsLength !== allConcertsLength}
                     {viewName} ({shownConcertsLength}/{allConcertsLength})
                 {:else}
                     {viewName} ({allConcertsLength})
                 {/if}
-                {#if viewName !== "All"}
-                    <span class="smol">▼</span>
-                    <div class="dropdown-options">
-                        <button on:click={() => exportView(viewName)}
-                            >Export view to JSON</button
-                        >
-                        <button on:click={() => deleteView(viewName)}
-                            >Delete view</button
-                        >
-                    </div>
-                {/if}
-            </button>
-        </div>
+            </span>
+            <svelte:fragment slot="options">
+                <button on:click={() => exportView(viewName)}
+                    >Export view to JSON</button
+                >
+                <button on:click={() => deleteView(viewName)}
+                    >Delete view</button
+                >
+            </svelte:fragment>
+        </Dropdown>
     {/each}
-    <div class="dropdown-trigger">
-        <button class="view-button dropdown-button">
-            Add new view <span class="smol">▼</span>
-            <div class="dropdown-options">
-                <button on:click={addEmptyView}>New empty view</button>
-                <button on:click={addViewFromShownConcerts}
-                    >... from currently shown concerts</button
-                >
-                <button on:click={addViewFromSelectedConcerts}
-                    >... from currently selected concerts</button
-                >
-                <button on:click={addViewFromJSON}
-                    >... from a file upload</button
-                >
-            </div>
-        </button>
-    </div>
+    <Dropdown selected={false}>
+        <span slot="text">Add new view</span>
+        <svelte:fragment slot="options">
+            <button on:click={addEmptyView}>New empty view</button>
+            <button on:click={addViewFromShownConcerts}
+                >... from currently shown concerts</button
+            >
+            <button on:click={addViewFromSelectedConcerts}
+                >... from currently selected concerts</button
+            >
+            <button on:click={addViewFromJSON}>... from a file upload</button>
+        </svelte:fragment>
+    </Dropdown>
 </div>
 <FileSelector bind:mode={fileSelectorMode} />
 
 <style>
-    button.view-button {
-        background-color: #f0f0f0;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 5px;
-
-        transition: all 0.3s;
-        transition-property: background-color, border-color, box-shadow;
-    }
-
-    button.active {
-        background-color: #c1eaf5;
-        border-color: #32aecf;
-        box-shadow: 0 0 1px #32aecf;
-    }
-
     div.view-list {
         display: flex;
         flex-wrap: wrap;
         gap: 7px;
         align-items: baseline;
-    }
-
-    button.dropdown-button {
-        position: relative;
-    }
-
-    div.dropdown-options {
-        display: none;
-    }
-
-    button.dropdown-button:hover > div.dropdown-options {
-        display: flex;
-        flex-direction: column;
-        gap: 0px;
-        position: absolute;
-        top: 26.5px;
-        left: -1px;
-        width: max-content;
-        z-index: 1;
-    }
-
-    div.dropdown-options button {
-        background-color: #f0f0f0;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 5px;
-        margin: 0;
-        width: 100%;
-        text-align: left;
-    }
-
-    div.dropdown-options button:hover {
-        background-color: #ddd;
-    }
-
-    span.smol {
-        font-size: 0.7em;
-        margin-left: 2px;
     }
 </style>

@@ -5,7 +5,7 @@ import { initialFilters, type FiltersType } from "src/lib/filters";
 // Concerts and their views
 type ConcertViews = Map<string, Concert[]>;
 import allConcerts from "src/assets/concerts.json";
-const defaultViewName = "All";
+export const defaultViewName = "All";
 const localStorageKey = "local_views";
 
 // This function expects { "viewName": ["concertId1", "concertId2", ...], ... }

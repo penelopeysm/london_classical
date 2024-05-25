@@ -5,26 +5,65 @@
         concertViews,
         currentViewName,
         selectedConcertIndices,
+        defaultViewName,
     } from "src/lib/stores";
+    import Dropdown from "src/components/Dropdown.svelte";
 
-    let allConcerts: Concert[] = $concertViews.get($currentViewName) as Concert[];
+    let allConcerts: Concert[] = $concertViews.get(
+        $currentViewName,
+    ) as Concert[];
     let selectedConcerts: Concert[] = allConcerts.filter((_, idx) =>
         $selectedConcertIndices.includes(idx),
     );
+
+    function compareConcertTime(a: Concert, b: Concert): number {
+        let aDate = new Date(a.datetime);
+        let bDate = new Date(b.datetime);
+        return aDate.getTime() - bDate.getTime();
+    }
+
+    // TODO Reduce duplication with ViewList.svelte
+    function addToView(concerts: Concert[], viewName: string) {
+        const existingConcerts = $concertViews.get(viewName) as Concert[];
+        // Remove dupes and sort by date
+        const mergedConcerts = [...existingConcerts, ...concerts]
+            .filter((c, idx, arr) => arr.indexOf(c) === idx)
+            .sort(compareConcertTime);
+        $concertViews.set(viewName, mergedConcerts);
+        $concertViews = new Map($concertViews); // trigger store update
+    }
+
+    function addToNewView(concerts: Concert[]) {
+        const newViewName = getNewViewName();
+        if (newViewName === null) {
+            return;
+        }
+        $concertViews.set(newViewName, concerts);
+        $concertViews = new Map($concertViews); // Required to trigger store update
+        $currentViewName = newViewName;
+    }
+
+    function getNewViewName(): string | null {
+        const newViewName = prompt("Enter a name for the new view");
+        if (newViewName === null) {
+            return null;
+        }
+        if (newViewName === "") {
+            alert("Please enter a name");
+            return null;
+        }
+        if ($concertViews.has(newViewName)) {
+            alert("A view with that name already exists");
+            return null;
+        }
+        return newViewName;
+    }
 
     $: {
         allConcerts = $concertViews.get($currentViewName) as Concert[];
         selectedConcerts = allConcerts.filter((_, idx) =>
             $selectedConcertIndices.includes(idx),
         );
-    }
-
-    function exportSelection() {
-        alert("TODO: Export selected concerts to file");
-    }
-
-    function makeNewView() {
-        alert("TODO: Create new view with selected concerts");
     }
 </script>
 
@@ -52,18 +91,29 @@
                 {/each}
             </div>
 
-            <p>
-                Don&rsquo;t click these buttons, they don&rsquo;t do anything
-                yet. You&rsquo;ll just get an annoying popup.
-            </p>
-
-            <button on:click={exportSelection}>
-                TODO: Export selected concerts to file
-            </button>
-
-            <button on:click={makeNewView}>
-                TODO: Create new view with selected concerts
-            </button>
+            <Dropdown>
+                <span slot="text">Add to view</span>
+                <svelte:fragment slot="options">
+                    {#each $concertViews
+                        .keys()
+                        .filter((k) => k !== defaultViewName) as view}
+                        <button
+                            on:click={() => {
+                                addToView(selectedConcerts, view);
+                            }}
+                        >
+                            {view}
+                        </button>
+                    {/each}
+                    <button
+                        on:click={() => {
+                            addToNewView(selectedConcerts);
+                        }}
+                    >
+                        New empty view...
+                    </button>
+                </svelte:fragment>
+            </Dropdown>
         </div>
     {/if}
 </div>
@@ -101,10 +151,5 @@
 
     .italic {
         font-style: italic;
-    }
-
-    button {
-        margin-top: 5px;
-        font-family: inherit;
     }
 </style>
