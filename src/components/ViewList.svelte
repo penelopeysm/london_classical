@@ -89,6 +89,13 @@
         console.log(exportJson);
         console.log("Exporting view", viewName);
 
+        if (window.showSaveFilePicker === undefined) {
+            alert(
+                "This feature is only available in browsers that support the File System Access API. Upgrade your browser (and if you're on Safari, use a different browser, please)",
+            );
+            return;
+        }
+
         const filePickerOpts: SaveFilePickerOptions = {
             types: [
                 {
@@ -124,9 +131,9 @@
             $concertViews.get(viewName),
         ).length}
         {@const shownConcertsLength = shownIndices.length}
-        {#if viewName === "All"}
+        <div class="dropdown-trigger">
             <button
-                class="view-button"
+                class="view-button dropdown-button"
                 class:active={$currentViewName === viewName}
                 on:click={() => setViewName(viewName)}
             >
@@ -135,19 +142,7 @@
                 {:else}
                     {viewName} ({allConcertsLength})
                 {/if}
-            </button>
-        {:else}
-            <div class="dropdown-trigger">
-                <button
-                    class="view-button dropdown-button"
-                    class:active={$currentViewName === viewName}
-                    on:click={() => setViewName(viewName)}
-                >
-                    {#if $currentViewName === viewName && shownConcertsLength !== allConcertsLength}
-                        {viewName} ({shownConcertsLength}/{allConcertsLength})
-                    {:else}
-                        {viewName} ({allConcertsLength})
-                    {/if}
+                {#if viewName !== "All"}
                     <span class="smol">▼</span>
                     <div class="dropdown-options">
                         <button on:click={() => exportView(viewName)}
@@ -157,9 +152,9 @@
                             >Delete view</button
                         >
                     </div>
-                </button>
-            </div>
-        {/if}
+                {/if}
+            </button>
+        </div>
     {/each}
     <div class="dropdown-trigger">
         <button class="view-button dropdown-button">
@@ -218,7 +213,7 @@
         flex-direction: column;
         gap: 0px;
         position: absolute;
-        top: 27px;
+        top: 26.5px;
         left: -1px;
         width: max-content;
         z-index: 1;
