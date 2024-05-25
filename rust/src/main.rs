@@ -60,10 +60,20 @@ async fn main() {
     full_concerts.append(&mut proms_concerts);
     full_concerts.sort_by_key(|concert| concert.datetime);
 
+    // Add IDs in
     let full_concerts_with_ids: Vec<core::Concert> = full_concerts
         .into_iter()
         .map(core::add_id_to_concert)
         .collect();
+
+    // Check uniqueness of IDs
+    let mut all_ids: Vec<&str> = full_concerts_with_ids.iter().map(|c| c.id.as_str()).collect();
+    all_ids.sort();
+    for i in 0..all_ids.len() - 1 {
+        if all_ids[i] == all_ids[i + 1] {
+            panic!("Duplicate ID: {}", all_ids[i]);
+        }
+    }
 
     let output_dir = env!("CARGO_MANIFEST_DIR").to_string() + "/../src/assets";
     create_dir_all(&output_dir).unwrap();
