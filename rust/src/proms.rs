@@ -6,7 +6,7 @@ use scraper::{ElementRef, Html, Selector};
 use std::cmp::min;
 
 // Scrapes concerts from BBC Proms website
-pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::Concert> {
+pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertData> {
     println!("----------------------------------------");
     println!("Scraping BBC Proms from URL: {}", url);
     println!("----------------------------------------");
@@ -23,7 +23,7 @@ pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::Concert> {
         .unwrap();
     let doc: Html = Html::parse_document(&html);
 
-    let mut concerts: Vec<core::Concert> = vec![];
+    let mut concerts: Vec<core::ConcertData> = vec![];
 
     let date_selector: Selector =
         Selector::parse("li.ev-event-calendar__single-date-events").unwrap();
@@ -185,7 +185,7 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
 }
 
 /// Combines the date and the concert metadata to form a full core::Concert
-fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::Concert {
+fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::ConcertData {
     let naive_datetime = date
         .and_hms_opt(metadata.london_time.0, metadata.london_time.1, 0)
         .unwrap();
@@ -195,7 +195,7 @@ fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::C
         && (metadata.title.starts_with("Prom") || metadata.title.starts_with("First Night"));
     let promming_price = 800;
 
-    let concert = core::Concert {
+    let concert = core::ConcertData {
         datetime: tz_datetime.with_timezone(&Utc),
         url: metadata.url,
         venue: metadata.venue,

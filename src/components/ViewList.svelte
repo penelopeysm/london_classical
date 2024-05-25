@@ -1,7 +1,7 @@
 <script lang="ts">
     import { type Concert } from "src/lib/bindings/Concert";
     import {
-        concerts,
+        concertViews,
         filters,
         currentViewName,
         selectedConcertIndices,
@@ -20,7 +20,8 @@
         if (newViewName === null) {
             return;
         }
-        $concerts.set(newViewName, []);
+        $concertViews.set(newViewName, []);
+        $concertViews = new Map($concertViews); // Required to trigger store update
         $currentViewName = newViewName;
     }
 
@@ -31,7 +32,8 @@
         }
         const shownConcerts = shownIndices.map((i) => allConcerts[i]);
         $filters = initialFilters;
-        $concerts.set(newViewName, shownConcerts);
+        $concertViews.set(newViewName, shownConcerts);
+        $concertViews = new Map($concertViews); // Required to trigger store update
         $currentViewName = newViewName;
     }
 
@@ -44,7 +46,8 @@
             (i) => allConcerts[i],
         );
         $filters = initialFilters;
-        $concerts.set(newViewName, selectedConcerts);
+        $concertViews.set(newViewName, selectedConcerts);
+        $concertViews = new Map($concertViews); // Required to trigger store update
         $currentViewName = newViewName;
     }
 
@@ -57,11 +60,24 @@
             alert("Please enter a name");
             return null;
         }
-        if ($concerts.has(newViewName)) {
+        if ($concertViews.has(newViewName)) {
             alert("A view with that name already exists");
             return null;
         }
         return newViewName;
+    }
+
+    function deleteView(viewName: string) {
+        $concertViews.delete(viewName);
+        $concertViews = new Map($concertViews); // Required to trigger store update
+        $currentViewName = "All";
+    }
+
+    function exportView(viewName: string) {
+        let concertIds = notUndefined($concertViews.get(viewName)).map(
+            (c) => c.id,
+        );
+        console.log(JSON.stringify({ viewName, concerts: concertIds }));
     }
 
     // Silence type errors
@@ -74,25 +90,50 @@
 </script>
 
 <div class="view-list">
-    {#each $concerts.keys() as viewName}
+    {#each $concertViews.keys() as viewName}
         {@const allConcertsLength = notUndefined(
-            $concerts.get(viewName),
+            $concertViews.get(viewName),
         ).length}
         {@const shownConcertsLength = shownIndices.length}
-        <button
-            class="view-button"
-            class:active={$currentViewName === viewName}
-            on:click={() => setViewName(viewName)}
-        >
-            {#if $currentViewName === viewName && shownConcertsLength !== allConcertsLength}
-                {viewName} ({shownConcertsLength}/{allConcertsLength})
-            {:else}
-                {viewName} ({allConcertsLength})
-            {/if}
-        </button>
+        {#if viewName === "All"}
+            <button
+                class="view-button"
+                class:active={$currentViewName === viewName}
+                on:click={() => setViewName(viewName)}
+            >
+                {#if $currentViewName === viewName && shownConcertsLength !== allConcertsLength}
+                    {viewName} ({shownConcertsLength}/{allConcertsLength})
+                {:else}
+                    {viewName} ({allConcertsLength})
+                {/if}
+            </button>
+        {:else}
+            <div class="dropdown-trigger">
+                <button
+                    class="view-button add-new-view"
+                    class:active={$currentViewName === viewName}
+                    on:click={() => setViewName(viewName)}
+                >
+                    {#if $currentViewName === viewName && shownConcertsLength !== allConcertsLength}
+                        {viewName} ({shownConcertsLength}/{allConcertsLength})
+                    {:else}
+                        {viewName} ({allConcertsLength})
+                    {/if}
+                    <span class="smol">▼</span>
+                    <div class="dropdown-options">
+                        <button on:click={() => exportView(viewName)}
+                            >Export view to JSON</button
+                        >
+                        <button on:click={() => deleteView(viewName)}
+                            >Delete view</button
+                        >
+                    </div>
+                </button>
+            </div>
+        {/if}
     {/each}
     <div class="dropdown-trigger">
-        <button class="view-button" id="add-new-view">
+        <button class="view-button add-new-view">
             Add new view <span class="smol">▼</span>
             <div class="dropdown-options">
                 <button on:click={addEmptyView}>New empty view</button>
@@ -108,10 +149,6 @@
 </div>
 
 <style>
-    button {
-        font-family: inherit;
-    }
-
     button.view-button {
         background-color: #f0f0f0;
         border: 1px solid #ccc;
@@ -135,7 +172,7 @@
         align-items: baseline;
     }
 
-    button#add-new-view {
+    button.add-new-view {
         position: relative;
     }
 
@@ -143,7 +180,7 @@
         display: none;
     }
 
-    button#add-new-view:hover > div.dropdown-options {
+    button.add-new-view:hover > div.dropdown-options {
         display: flex;
         flex-direction: column;
         gap: 0px;
@@ -151,6 +188,7 @@
         top: 27px;
         left: -1px;
         width: max-content;
+        z-index: 1;
     }
 
     div.dropdown-options button {

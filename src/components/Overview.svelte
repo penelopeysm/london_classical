@@ -3,19 +3,19 @@
     import ConcertList from "src/components/ConcertList.svelte";
     import ViewList from "src/components/ViewList.svelte";
     import {
-        concerts,
+        concertViews,
         filters,
         currentViewName,
         selectedConcertIndices,
     } from "src/lib/stores";
     import { getPassingIndices } from "src/lib/filters";
 
-    let allConcerts: Concert[] = $concerts.get($currentViewName) as Concert[];
+    let allConcerts: Concert[] = $concertViews.get($currentViewName) as Concert[];
     let shownIndices: number[] = getPassingIndices(allConcerts, $filters);
 
     $: {
         // Calculate the indices of the concerts that should be shown
-        allConcerts = $concerts.get($currentViewName) as Concert[];
+        allConcerts = $concertViews.get($currentViewName) as Concert[];
         shownIndices = getPassingIndices(allConcerts, $filters);
         // Clear selected concerts when filters are changed (or allConcerts for that matter)
         $selectedConcertIndices = [];

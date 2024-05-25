@@ -217,6 +217,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "deunicode"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "339544cc9e2c4dc3fc7149fd630c5f22263a4fdf18a98afd0075784968b5cf00"
+
+[[package]]
 name = "dtoa"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -686,6 +692,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "chrono-tz",
+ "deunicode",
  "futures",
  "html-escape",
  "regex",

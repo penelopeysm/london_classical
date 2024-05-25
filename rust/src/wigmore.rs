@@ -8,21 +8,21 @@ use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 
 /// Fetch full data for all Wigmore concerts
-pub async fn get_concerts(client: &reqwest::Client) -> Vec<core::Concert> {
+pub async fn get_concerts(client: &reqwest::Client) -> Vec<core::ConcertData> {
     println!("----------------------------------------");
     println!("Scraping Wigmore Hall concerts");
     println!("----------------------------------------");
 
     let wigmore_intermediate_concerts = get_api(client).await;
 
-    let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..40])
+    let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..50])
         .map(|concert| get_full_concert(concert, client))
         .buffer_unordered(10)
-        .collect::<Vec<Option<core::Concert>>>()
+        .collect::<Vec<Option<core::ConcertData>>>()
         .await
         .into_iter()
         .flatten()
-        .collect::<Vec<core::Concert>>();
+        .collect::<Vec<core::ConcertData>>();
 
     wigmore_concerts.sort_by_key(|concert| concert.datetime);
     wigmore_concerts
@@ -104,7 +104,7 @@ async fn get_api(client: &reqwest::Client) -> Vec<WigmoreFrontPageConcert> {
 async fn get_full_concert(
     fp_entry: &WigmoreFrontPageConcert,
     client: &reqwest::Client,
-) -> Option<core::Concert> {
+) -> Option<core::ConcertData> {
     // Wigmore's website actually seems to give us all the data in JSON format, but curiously, it's
     // in a script tag in the HTML. Not complaining though as it is still so much easier than
     // parsing the HTML itself.
@@ -136,7 +136,7 @@ async fn get_full_concert(
 fn parse_concert_json(
     fp_entry: &WigmoreFrontPageConcert,
     json: serde_json::Value,
-) -> core::Concert {
+) -> core::ConcertData {
     // Parse repertoire
     let mut pieces = Vec::new();
     let opt_repertoire = json["data"]["page"]["repertoire"].as_array();
@@ -226,7 +226,7 @@ fn parse_concert_json(
         cleaned
     }
 
-    let concert = core::Concert {
+    let concert = core::ConcertData {
         datetime: fp_entry.datetime,
         url: fp_entry.url.clone(),
         title: fp_entry.title.clone(),

@@ -60,7 +60,13 @@ async fn main() {
     full_concerts.append(&mut proms_concerts);
     full_concerts.sort_by_key(|concert| concert.datetime);
 
-    create_dir_all("../src/assets").unwrap();
-    let output_file = File::create("../src/assets/concerts.json").unwrap();
-    serde_json::to_writer_pretty(output_file, &full_concerts).unwrap();
+    let full_concerts_with_ids: Vec<core::Concert> = full_concerts
+        .into_iter()
+        .map(core::add_id_to_concert)
+        .collect();
+
+    let output_dir = env!("CARGO_MANIFEST_DIR").to_string() + "/../src/assets";
+    create_dir_all(&output_dir).unwrap();
+    let output_file = File::create(output_dir + "/concerts.json").unwrap();
+    serde_json::to_writer_pretty(output_file, &full_concerts_with_ids).unwrap();
 }

@@ -2,18 +2,18 @@
     import { type Concert } from "src/lib/bindings/Concert";
     import SelectedConcertDetails from "src/components/SelectedConcertDetails.svelte";
     import {
-        concerts,
+        concertViews,
         currentViewName,
         selectedConcertIndices,
     } from "src/lib/stores";
 
-    let allConcerts: Concert[] = $concerts.get($currentViewName) as Concert[];
+    let allConcerts: Concert[] = $concertViews.get($currentViewName) as Concert[];
     let selectedConcerts: Concert[] = allConcerts.filter((_, idx) =>
         $selectedConcertIndices.includes(idx),
     );
 
     $: {
-        allConcerts = $concerts.get($currentViewName) as Concert[];
+        allConcerts = $concertViews.get($currentViewName) as Concert[];
         selectedConcerts = allConcerts.filter((_, idx) =>
             $selectedConcertIndices.includes(idx),
         );
