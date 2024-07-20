@@ -52,7 +52,7 @@ async fn main() {
 
     // Fetch Proms
     let mut proms_concerts =
-        proms::scrape("https://www.bbc.co.uk/events/rfbp5v/series", &client).await;
+        proms::scrape(proms::PROMS_2024_URL, &client).await;
 
     // Concatenate and sort
     let mut full_concerts = vec![];

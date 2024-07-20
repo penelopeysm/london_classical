@@ -5,6 +5,8 @@ use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::cmp::min;
 
+pub const PROMS_2024_URL: &str = "https://www.bbc.co.uk/events/rfbp5v/series";
+
 // Scrapes concerts from BBC Proms website
 pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertData> {
     println!("----------------------------------------");
@@ -17,16 +19,16 @@ pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertDat
         .header("User-Agent", "penelopeysm/london-classical/0.1")
         .send()
         .await
-        .unwrap()
+        .expect("Failed to fetch Proms page")
         .text()
         .await
-        .unwrap();
+        .expect("Failed to parse Proms page");
     let doc: Html = Html::parse_document(&html);
 
     let mut concerts: Vec<core::ConcertData> = vec![];
 
-    let date_selector: Selector =
-        Selector::parse("li.ev-event-calendar__single-date-events").unwrap();
+    let date_selector: Selector = Selector::parse("li.ev-event-calendar__single-date-events")
+        .expect("Invalid overall date selector");
 
     for this_date_performances in doc.select(&date_selector) {
         let (date, metadatas) = scrape_one_date(this_date_performances).await;
@@ -71,7 +73,12 @@ async fn scrape_one_date(date_fragment: ElementRef<'_>) -> (NaiveDate, Vec<Proms
     // BBC's website reports dates as e.g. "Fri 23 Aug 2024"
     let date = NaiveDate::parse_from_str(date_str, "%a %e %b %Y").unwrap();
 
-    // Get the concerts themselves
+    // The BBC website retains concerts from the past too, so we filter them out right here
+    if date < Utc::now().date_naive() {
+        return (date, vec![]);
+    }
+
+    // For any dates that aren't in the past, get the concerts themselves
     let mut intermediate_concerts: Vec<PromsConcertMetadata> = vec![];
     let concert_details_selector =
         Selector::parse("li.ev-event-calendar__event-summary-container").unwrap();
@@ -84,6 +91,16 @@ async fn scrape_one_date(date_fragment: ElementRef<'_>) -> (NaiveDate, Vec<Proms
 
 /// Parses a single concert entry within a date fragment
 fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
+    let title = elem
+        .select(&Selector::parse("div.ev-event-calendar__name").unwrap())
+        .next()
+        .unwrap()
+        .text()
+        .next()
+        .unwrap()
+        .trim()
+        .to_string();
+
     let time_string: &str = elem
         .select(&Selector::parse("div.ev-event-calendar__time").unwrap())
         .next()
@@ -124,7 +141,7 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
     let price_text = elem
         .select(&price_selector)
         .next()
-        .unwrap()
+        .unwrap_or_else(|| panic!("Couldn't find price for concert '{}'", title))
         .text()
         .next()
         .unwrap()
@@ -145,15 +162,7 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
 
     PromsConcertMetadata {
         london_time: parsed_time,
-        title: elem
-            .select(&Selector::parse("div.ev-event-calendar__name").unwrap())
-            .next()
-            .unwrap()
-            .text()
-            .next()
-            .unwrap()
-            .trim()
-            .to_string(),
+        title,
         description: elem
             .select(&Selector::parse("p.ev-event-calendar__event-description").unwrap())
             .next()
@@ -262,5 +271,18 @@ fn parse_performer(performer_elem: ElementRef<'_>) -> core::Performer {
             [] => None,
             _ => Some(role_texts.join(" ")),
         },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_proms_2024() {
+        let client = reqwest::Client::new();
+        let concerts = scrape(PROMS_2024_URL, &client).await;
+        let json = serde_json::to_string(&concerts);
+        assert!(json.is_ok());
     }
 }
