@@ -21,20 +21,19 @@ The frontend is built with Svelte / TypeScript, and is in the `src` subdirectory
 2. Run the Rust application to generate the list of concerts.
 
    ```
-   cd rust
-   cargo run
+   pnpm rust:types
+   pnpm rust
    ```
 
 3. Run the website.
 
    ```
-   # cd back to top level
-   npm install
-   npm run dev
+   pnpm install
+   pnpm dev
    ```
 
 ## Generating types
 
 The types associated with concerts are defined in `rust/src/core.rs`.
-These types are exported to TypeScript using `ts-rs`, and live inside `src/`
-To update the TypeScript bindings: run `make types` from the `rust` subdirectory.
+These types are exported to TypeScript using `ts-rs`, and live inside `src/lib/bindings`
+To update the TypeScript bindings, run `pnpm rust:types`

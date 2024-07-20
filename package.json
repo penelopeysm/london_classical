@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "rust:types": "cd rust && TS_RS_EXPORT_DIR=../src/lib/bindings cargo test",
+    "rust": "cd rust && cargo run"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.0.2",
