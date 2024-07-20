@@ -51,3 +51,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: dist
           keep_files: false
+          user_name: "GitHub Actions"
+          user_email: "github-actions[bot]@users.noreply.github.com"
