@@ -18,6 +18,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Set up Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
@@ -27,17 +32,10 @@ jobs:
           workspaces: "rust"
 
       - name: Generate JSON containing all concerts
-        working-directory: rust
-        run: cargo run
+        run: pnpm rust
 
       - name: Generate TypeScript types from Rust structs
-        working-directory: rust
-        run: make types
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
+        run: pnpm rust:types
 
       - name: Install dependencies
         run: pnpm install
