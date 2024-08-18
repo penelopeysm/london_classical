@@ -141,18 +141,17 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
     let price_text = elem
         .select(&price_selector)
         .next()
-        .unwrap_or_else(|| panic!("Couldn't find price for concert '{}'", title))
-        .text()
-        .next()
-        .unwrap()
-        .trim();
+        .map(|elem| elem.text().next().unwrap().trim());
     // Regexes are hacky, but it works fine for now ... otherwise the website text is very
     // inconsistent and hard to parse.
     let price_re = Regex::new(r"£(\d+)").unwrap();
-    let prices: Vec<u32> = price_re
-        .captures_iter(price_text)
-        .map(|cap| cap.get(1).unwrap().as_str().parse().unwrap())
-        .collect();
+    let prices: Vec<u32> = match price_text {
+        None => vec![],
+        Some(t) => price_re
+            .captures_iter(t)
+            .map(|cap| cap.get(1).unwrap().as_str().parse().unwrap())
+            .collect(),
+    };
     let (min_price, max_price) = match prices[..] {
         [] => (None, None),
         [price] => (Some(price * 100), Some(price * 100)),
