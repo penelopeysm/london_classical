@@ -29,12 +29,12 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "rust"
+          workspaces: "rust -> target"
 
       - name: Generate JSON containing all concerts
         run: pnpm rust
         env:
-          RUST_LOG: debug
+          RUST_LOG: "london_classical"
 
       - name: Generate TypeScript types from Rust structs
         run: pnpm rust:types
