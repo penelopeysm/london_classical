@@ -8,6 +8,17 @@ The scraping is done with a small Rust application, located in the `rust` subdir
 
 The frontend is built with Svelte / TypeScript, and is in the `src` subdirectory.
 
+## Which venue(s) does this code cover?
+
+Scraping is currently implemented for concerts at:
+
+- [x] Wigmore Hall
+- [ ] Barbican
+- [ ] Southbank Centre
+- [x] BBC Proms
+- [ ] Anything else at the Royal Albert Hall
+
+Because the Proms aren't in season now, the website right now only lists Wigmore Hall concerts.
 
 ## Run locally
 
