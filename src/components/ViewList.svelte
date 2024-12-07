@@ -96,7 +96,7 @@
 
         if (window.showSaveFilePicker === undefined) {
             alert(
-                "This feature is only available in browsers that support the File System Access API. Upgrade your browser (and if you're on Safari, use a different browser, please)",
+                "The export feature is only available in browsers that support the File System Access API. As of August 2024, this means Chrome, Edge, or Opera.",
             );
             return;
         }

@@ -47,8 +47,8 @@ async fn main() {
 
     use london_classical::wigmore;
 
-    // Fetch Wigmore concerts
-    let mut wigmore_concerts = wigmore::get_concerts(&client).await;
+    // Fetch Wigmore concerts. If you push it a bit more it starts to rate limit
+    let mut wigmore_concerts = wigmore::get_concerts(&client, Some(220)).await;
 
     // Fetch Proms
     let mut proms_concerts =

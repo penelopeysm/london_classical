@@ -7,15 +7,23 @@ use regex::Regex;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 
-/// Fetch full data for all Wigmore concerts
-pub async fn get_concerts(client: &reqwest::Client) -> Vec<core::ConcertData> {
+/// Fetch full data for all Wigmore concerts, up to a maximum of `max` if specified
+pub async fn get_concerts(client: &reqwest::Client, max: Option<usize>) -> Vec<core::ConcertData> {
+    let max_text = match max {
+        Some(n) => format!("first {}", n),
+        None => "all".to_string(),
+    };
     println!("----------------------------------------");
-    println!("Scraping Wigmore Hall concerts");
+    println!("Scraping {} Wigmore Hall concerts", max_text);
     println!("----------------------------------------");
 
     let wigmore_intermediate_concerts = get_api(client).await;
+    let slice = match max {
+        Some(n) => &wigmore_intermediate_concerts[..n],
+        None => &wigmore_intermediate_concerts,
+    };
 
-    let mut wigmore_concerts = stream::iter(&wigmore_intermediate_concerts[..50])
+    let mut wigmore_concerts = stream::iter(slice)
         .map(|concert| get_full_concert(concert, client))
         .buffer_unordered(10)
         .collect::<Vec<Option<core::ConcertData>>>()
@@ -257,7 +265,7 @@ mod tests {
     #[tokio::test]
     async fn test_wigmore() {
         let client = reqwest::Client::new();
-        let concerts = get_concerts(&client).await;
+        let concerts = get_concerts(&client, None).await;
         let json = serde_json::to_string(&concerts);
         assert!(json.is_ok());
     }
