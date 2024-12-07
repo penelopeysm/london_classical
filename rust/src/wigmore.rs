@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use futures::future::join_all;
 use futures::stream::{self, StreamExt};
 use html_escape::decode_html_entities;
+use log::{info, warn};
 use regex::Regex;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
@@ -13,9 +14,7 @@ pub async fn get_concerts(client: &reqwest::Client, max: Option<usize>) -> Vec<c
         Some(n) => format!("first {}", n),
         None => "all".to_string(),
     };
-    println!("----------------------------------------");
-    println!("Scraping {} Wigmore Hall concerts", max_text);
-    println!("----------------------------------------");
+    info!("Scraping {max_text} Wigmore Hall concerts");
 
     let wigmore_intermediate_concerts = get_api(client).await;
     let slice = match max {
@@ -33,6 +32,7 @@ pub async fn get_concerts(client: &reqwest::Client, max: Option<usize>) -> Vec<c
         .collect::<Vec<core::ConcertData>>();
 
     wigmore_concerts.sort_by_key(|concert| concert.datetime);
+    info!("Scraped {} Wigmore Hall concerts", wigmore_concerts.len());
     wigmore_concerts
 }
 
@@ -135,7 +135,7 @@ async fn get_full_concert(
     match json_result {
         Ok(json) => Some(parse_concert_json(fp_entry, json)),
         Err(e) => {
-            eprintln!("Error parsing JSON for concert at {}: {}", fp_entry.url, e);
+            warn!("Error parsing JSON for concert at {}: {}", fp_entry.url, e);
             None
         }
     }
@@ -149,7 +149,7 @@ fn parse_concert_json(
     let mut pieces = Vec::new();
     let opt_repertoire = json["data"]["page"]["repertoire"].as_array();
     match opt_repertoire {
-        None => eprintln!("No repertoire found for concert at {}", fp_entry.url),
+        None => warn!("No repertoire found for concert at {}", fp_entry.url),
         Some(repertoire) => {
             for piece in repertoire {
                 let opt_cycle = piece["cycle"].as_str().map(decode_html_entities);
@@ -183,7 +183,7 @@ fn parse_concert_json(
     let mut performers = Vec::new();
     let opt_credits = json["data"]["page"]["credits"].as_array();
     match opt_credits {
-        None => eprintln!("No performer credits found for concert at {}", fp_entry.url),
+        None => warn!("No performer credits found for concert at {}", fp_entry.url),
         Some(credits) => {
             for credit in credits {
                 let opt_artist_name = credit["artist"]["title"].as_str().map(decode_html_entities);

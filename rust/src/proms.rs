@@ -1,6 +1,7 @@
 use crate::core;
 use chrono::{NaiveDate, TimeZone, Utc};
 use chrono_tz::Europe::London;
+use log::info;
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::cmp::min;
@@ -9,9 +10,7 @@ pub const PROMS_2024_URL: &str = "https://www.bbc.co.uk/events/rfbp5v/series";
 
 // Scrapes concerts from BBC Proms website
 pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertData> {
-    println!("----------------------------------------");
-    println!("Scraping BBC Proms from URL: {}", url);
-    println!("----------------------------------------");
+    info!("Scraping BBC Proms from URL: {}", url);
 
     let html: String = client
         .get(url)
@@ -38,6 +37,7 @@ pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertDat
             .for_each(|concert| concerts.push(concert));
     }
 
+    info!("Scraped {} Proms", concerts.len());
     concerts
 }
 

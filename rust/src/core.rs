@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use chrono_tz::Europe::London;
 use deunicode::deunicode;
+use log::info;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -58,5 +59,5 @@ pub fn add_id_to_concert(c: ConcertData) -> Concert {
 
 pub fn report_concert(c: &ConcertData) {
     let london_datetime = c.datetime.with_timezone(&London);
-    eprintln!("Found concert on {}: {}", london_datetime, c.title);
+    info!("Found {}: {}", london_datetime, c.title);
 }

@@ -1,6 +1,7 @@
 use chrono::{DateTime, TimeZone, Utc};
 use chrono_tz::Europe::London;
 use london_classical::core;
+use log::debug;
 use serde::Serialize;
 use std::fs::{create_dir_all, File};
 
@@ -42,17 +43,27 @@ fn display_programme(concert: &Concert) {
 
 #[tokio::main]
 async fn main() {
-    use london_classical::proms;
+    pretty_env_logger::init();
     let client = reqwest::Client::new();
 
+    // Fetch Wigmore concerts, first reading from $WIGMORE_MAX and defaulting to 220 if not given.
+    // If you push it a bit more it starts to rate limit
     use london_classical::wigmore;
-
-    // Fetch Wigmore concerts. If you push it a bit more it starts to rate limit
-    let mut wigmore_concerts = wigmore::get_concerts(&client, Some(220)).await;
+    let max_wigmore_concerts = {
+        match std::env::var("WIGMORE_MAX") {
+            Ok(s) => match s.as_str() {
+                "all" => None,
+                _ => Some(s.parse::<usize>().unwrap()),
+            },
+            Err(_) => Some(220),
+        }
+    };
+    debug!("max_wigmore_concerts: {:?}", max_wigmore_concerts);
+    let mut wigmore_concerts = wigmore::get_concerts(&client, max_wigmore_concerts).await;
 
     // Fetch Proms
-    let mut proms_concerts =
-        proms::scrape(proms::PROMS_2024_URL, &client).await;
+    use london_classical::proms;
+    let mut proms_concerts = proms::scrape(proms::PROMS_2024_URL, &client).await;
 
     // Concatenate and sort
     let mut full_concerts = vec![];
@@ -67,7 +78,10 @@ async fn main() {
         .collect();
 
     // Check uniqueness of IDs
-    let mut all_ids: Vec<&str> = full_concerts_with_ids.iter().map(|c| c.id.as_str()).collect();
+    let mut all_ids: Vec<&str> = full_concerts_with_ids
+        .iter()
+        .map(|c| c.id.as_str())
+        .collect();
     all_ids.sort();
     for i in 0..all_ids.len() - 1 {
         if all_ids[i] == all_ids[i + 1] {
