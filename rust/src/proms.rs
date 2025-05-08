@@ -6,7 +6,7 @@ use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::cmp::min;
 
-pub const PROMS_2024_URL: &str = "https://www.bbc.co.uk/events/rfbp5v/series";
+pub const PROMS_2025_URL: &str = "https://www.bbc.co.uk/events/rb5v4f/series";
 
 // Scrapes concerts from BBC Proms website
 pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertData> {
@@ -280,7 +280,7 @@ mod tests {
     #[tokio::test]
     async fn test_proms_2024() {
         let client = reqwest::Client::new();
-        let concerts = scrape(PROMS_2024_URL, &client).await;
+        let concerts = scrape(PROMS_2025_URL, &client).await;
         let json = serde_json::to_string(&concerts);
         assert!(json.is_ok());
     }
