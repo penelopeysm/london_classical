@@ -76,7 +76,8 @@ fn parse_api(json_items: &Vec<serde_json::Value>) -> Vec<WigmoreFrontPageConcert
         let title: String = item["node"]["titleOverrideText"]
             .as_str()
             .unwrap()
-            .to_string();
+            .replace("<sub>", "")
+            .replace("</sub>", "");
         let subtitle: Option<String> = item["node"]["subtitleText"].as_str().map(|s| s.to_string());
 
         concerts.push(WigmoreFrontPageConcert {
