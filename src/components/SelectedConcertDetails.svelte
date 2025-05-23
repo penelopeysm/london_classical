@@ -137,7 +137,7 @@
 
     div.two-col-grid {
         display: grid;
-        grid-template-columns: max-content 1fr;
+        grid-template-columns: auto 1fr;
         gap: 4px 30px;
     }
 

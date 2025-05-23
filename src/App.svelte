@@ -51,9 +51,10 @@
 
     div.bottom {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 40% 60%;
         gap: 20px;
         width: 100%;
+        max-width: 100%;
         min-height: 0; /* So confusing that this is required */
         height: 100%;
         max-height: 100%;

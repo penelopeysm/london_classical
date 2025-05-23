@@ -280,7 +280,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_proms_2024() {
+    async fn test_proms_2025() {
         let client = reqwest::Client::new();
         let concerts = scrape(PROMS_2025_URL, &client).await;
         let json = serde_json::to_string(&concerts);
