@@ -1,7 +1,7 @@
 use chrono::{DateTime, TimeZone, Utc};
 use chrono_tz::Europe::London;
+use log::{debug, info};
 use london_classical::core;
-use log::debug;
 use serde::Serialize;
 use std::fs::{create_dir_all, File};
 
@@ -46,11 +46,11 @@ async fn main() {
     pretty_env_logger::init();
     let client = reqwest::Client::new();
 
-    // Fetch Wigmore concerts, first reading from $WIGMORE_MAX and defaulting to 220 if not given.
-    // If you push it a bit more it starts to rate limit
+    // Fetch Wigmore concerts, first reading from $LDNCLS_WIGMORE_MAX and defaulting to 220 if not
+    // given. If you push it a bit more it starts to rate limit
     use london_classical::wigmore;
     let max_wigmore_concerts = {
-        match std::env::var("WIGMORE_MAX") {
+        match std::env::var("LDNCLS_WIGMORE_MAX") {
             Ok(s) => match s.as_str() {
                 "all" => None,
                 _ => Some(s.parse::<usize>().unwrap()),
@@ -59,12 +59,33 @@ async fn main() {
         }
     };
     debug!("max_wigmore_concerts: {:?}", max_wigmore_concerts);
-    // let mut wigmore_concerts = wigmore::get_concerts(&client, max_wigmore_concerts).await;
-    let mut wigmore_concerts = vec![];
+    let scrape_wigmore = {
+        match std::env::var("LDNCLS_WIGMORE_DISABLE") {
+            Ok(any) => !any.is_empty(),
+            Err(_) => true,
+        }
+    };
+    let mut wigmore_concerts = if scrape_wigmore {
+        wigmore::get_concerts(&client, max_wigmore_concerts).await
+    } else {
+        info!("$LDNCLS_WIGMORE_DISABLE not empty; skipping Wigmore Hall concerts");
+        vec![]
+    };
 
     // Fetch Proms
     use london_classical::proms;
-    let mut proms_concerts = proms::scrape(proms::PROMS_2025_URL, &client).await;
+    let scrape_proms = {
+        match std::env::var("LDNCLS_PROMS_DISABLE") {
+            Ok(any) => !any.is_empty(),
+            Err(_) => true,
+        }
+    };
+    let mut proms_concerts = if scrape_proms {
+        proms::scrape(proms::PROMS_2025_URL, &client).await
+    } else {
+        info!("$LDNCLS_PROMS_DISABLE not empty; skipping Proms concerts");
+        vec![]
+    };
 
     // Concatenate and sort
     let mut full_concerts = vec![];

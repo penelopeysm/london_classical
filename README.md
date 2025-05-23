@@ -36,6 +36,11 @@ Because the Proms aren't in season now, the website right now only lists Wigmore
    pnpm rust
    ```
 
+   You can set the following environment variables to control the Rust app:
+    - `$LDNCLS_WIGMORE_MAX`: Maximum number of concerts to scrape from Wigmore Hall. Default: 220
+    - `$LDNCLS_WIGMORE_DISABLE`: Any non-empty value will disable scraping Wigmore Hall concerts.
+    - `$LDNCLS_PROMS_DISABLE`: Any non-empty value will disable scraping the Proms.
+
 3. Run the website.
 
    ```
