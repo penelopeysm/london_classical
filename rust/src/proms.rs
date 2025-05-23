@@ -6,7 +6,7 @@ use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::cmp::min;
 
-pub const PROMS_2025_URL: &str = "https://www.bbc.co.uk/events/rb5v4f/series";
+pub const PROMS_2025_URL: &str = "https://www.bbc.co.uk/events/rb5v4f/by/date/2025";
 
 // Scrapes concerts from BBC Proms website
 pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertData> {
@@ -110,7 +110,8 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
         .unwrap()
         .trim();
     let parsed_time: (u32, u32) = match time_string {
-        "26 –  27 Jul 2024" => (23, 00), // hack for a specific concert
+        // hack for a specific concert -- it's overnight so doesn't fit the usual pattern
+        "8 –  9 Aug 2025" => (23, 00),
         _ => {
             let time_string2: Vec<&str> = time_string.split(':').collect();
             (
@@ -241,6 +242,7 @@ fn parse_piece(piece_elem: ElementRef<'_>) -> Option<core::Piece> {
     // This is kind of hacky but it works
     let all_texts = piece_elem.text().collect::<Vec<&str>>();
     match all_texts[..] {
+        [] => None,
         ["interval"] => None,
         _ => Some(core::Piece {
             composer: all_texts[0].to_string(),

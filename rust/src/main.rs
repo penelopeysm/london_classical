@@ -59,12 +59,12 @@ async fn main() {
         }
     };
     debug!("max_wigmore_concerts: {:?}", max_wigmore_concerts);
-    let mut wigmore_concerts = wigmore::get_concerts(&client, max_wigmore_concerts).await;
+    // let mut wigmore_concerts = wigmore::get_concerts(&client, max_wigmore_concerts).await;
+    let mut wigmore_concerts = vec![];
 
     // Fetch Proms
     use london_classical::proms;
-    // let mut proms_concerts = proms::scrape(proms::PROMS_2025_URL, &client).await;
-    let mut proms_concerts = vec![];
+    let mut proms_concerts = proms::scrape(proms::PROMS_2025_URL, &client).await;
 
     // Concatenate and sort
     let mut full_concerts = vec![];
