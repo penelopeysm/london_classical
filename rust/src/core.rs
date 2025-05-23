@@ -47,7 +47,21 @@ pub struct Concert {
 }
 
 pub fn add_id_to_concert(c: ConcertData) -> Concert {
-    let id = format!("{}__{}", c.datetime.timestamp(), c.venue);
+    // Previously it used to be that the datetime + venue was enough to disambiguate all concerts.
+    // Unfortunately, this changed when Wigmore Hall started listing concerts that were at other
+    // venues. So now we also take the first 10 alphanumeric characters of the title.
+    let title_shortened = c
+        .title
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .take(10)
+        .collect::<String>();
+    let id = format!(
+        "{}__{}__{}",
+        c.datetime.timestamp(),
+        c.venue,
+        title_shortened
+    );
     // This is overkill but just in case I guess
     let id = deunicode(&id).replace(' ', "_").to_lowercase();
     let id = Regex::new(r"[^a-zA-Z0-9_]")

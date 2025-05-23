@@ -63,7 +63,8 @@ async fn main() {
 
     // Fetch Proms
     use london_classical::proms;
-    let mut proms_concerts = proms::scrape(proms::PROMS_2025_URL, &client).await;
+    // let mut proms_concerts = proms::scrape(proms::PROMS_2025_URL, &client).await;
+    let mut proms_concerts = vec![];
 
     // Concatenate and sort
     let mut full_concerts = vec![];
