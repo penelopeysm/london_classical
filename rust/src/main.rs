@@ -1,6 +1,6 @@
 use chrono::{DateTime, TimeZone, Utc};
 use chrono_tz::Europe::London;
-use log::{debug, info};
+use log::{debug, info, warn};
 use london_classical::core;
 use serde::Serialize;
 use std::fs::{create_dir_all, File};
@@ -61,12 +61,14 @@ async fn main() {
     debug!("max_wigmore_concerts: {:?}", max_wigmore_concerts);
     let scrape_wigmore = {
         match std::env::var("LDNCLS_WIGMORE_DISABLE") {
-            Ok(any) => !any.is_empty(),
+            Ok(any) => any.is_empty(),
             Err(_) => true,
         }
     };
     let mut wigmore_concerts = if scrape_wigmore {
-        wigmore::get_concerts(&client, max_wigmore_concerts).await
+        let cs = wigmore::get_concerts(&client, max_wigmore_concerts).await;
+        info!("Found {} Wigmore Hall concerts", cs.len());
+        cs
     } else {
         info!("$LDNCLS_WIGMORE_DISABLE not empty; skipping Wigmore Hall concerts");
         vec![]
@@ -76,12 +78,14 @@ async fn main() {
     use london_classical::proms;
     let scrape_proms = {
         match std::env::var("LDNCLS_PROMS_DISABLE") {
-            Ok(any) => !any.is_empty(),
+            Ok(any) => any.is_empty(),
             Err(_) => true,
         }
     };
     let mut proms_concerts = if scrape_proms {
-        proms::scrape(proms::PROMS_2025_URL, &client).await
+        let cs = proms::scrape(proms::PROMS_2025_URL, &client).await;
+        info!("Found {} Proms concerts", cs.len());
+        cs
     } else {
         info!("$LDNCLS_PROMS_DISABLE not empty; skipping Proms concerts");
         vec![]
@@ -105,9 +109,15 @@ async fn main() {
         .map(|c| c.id.as_str())
         .collect();
     all_ids.sort();
-    for i in 0..all_ids.len() - 1 {
-        if all_ids[i] == all_ids[i + 1] {
-            panic!("Duplicate ID: {}", all_ids[i]);
+
+    if all_ids.is_empty() {
+        info!("No concerts found!");
+    } else {
+        info!("Found {} concerts in total", all_ids.len());
+        for i in 0..all_ids.len() - 1 {
+            if all_ids[i] == all_ids[i + 1] {
+                panic!("Duplicate ID: {}", all_ids[i]);
+            }
         }
     }
 
