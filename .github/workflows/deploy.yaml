@@ -1,11 +1,11 @@
 name: "Deploy website"
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
+  # push:
+  #   branches:
+  #     - main
+  # schedule:
+  #   - cron: '0 0 * * *'
 
 permissions:
   contents: write
@@ -31,16 +31,10 @@ jobs:
         with:
           workspaces: "rust -> target"
 
-      - name: check out curl
-        run: |
-          curl -H 'User-Agent: penelopeysm/london-classical:0.1' https://www.southbankcentre.co.uk/whats-on/page/2/?artform-filter=classical-music
-
       - name: Generate JSON containing all concerts
         run: pnpm rust
         env:
           RUST_LOG: "london_classical"
-          LDNCLS_WIGMORE_DISABLE: "true"
-          LDNCLS_PROMS_DISABLE: "true"
 
       - name: Generate TypeScript types from Rust structs
         run: pnpm rust:types

@@ -10,15 +10,20 @@ The frontend is built with Svelte / TypeScript, and is in the `src` subdirectory
 
 ## Which venue(s) does this code cover?
 
-Scraping is currently implemented for concerts at:
+Scraping is currently implemented for classical music concerts at:
 
-- [x] Wigmore Hall
-- [ ] Barbican
-- [ ] Southbank Centre
-- [x] BBC Proms
-- [ ] Anything else at the Royal Albert Hall
+- ✅ Wigmore Hall
+- ✅ BBC Proms 2025
+- ✅ Southbank Centre
 
-Because the Proms aren't in season now, the website right now only lists Wigmore Hall concerts.
+Things I haven't yet implemented:
+
+- ❌ Barbican
+- ❌ Anything else at the Royal Albert Hall
+
+Unfortunately, I haven't been able to get GitHub Actions runners to scrape Southbank concerts (due to Cloudflare).
+I'm not sure if this can be fixed with headers, or if it's an IP block.
+This means that the website, unfortunately, has to be built manually right now.
 
 ## Run locally
 
