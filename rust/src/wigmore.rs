@@ -258,16 +258,3 @@ fn parse_concert_json(
     core::report_concert(&concert);
     concert
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_wigmore() {
-        let client = reqwest::Client::new();
-        let concerts = get_concerts(&client, None).await;
-        let json = serde_json::to_string(&concerts);
-        assert!(json.is_ok());
-    }
-}

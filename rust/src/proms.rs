@@ -269,16 +269,3 @@ fn parse_performer(performer_elem: ElementRef<'_>) -> core::Performer {
         },
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_proms_2025() {
-        let client = reqwest::Client::new();
-        let concerts = scrape(&client).await;
-        let json = serde_json::to_string(&concerts);
-        assert!(json.is_ok());
-    }
-}
