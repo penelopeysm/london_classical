@@ -40,7 +40,7 @@ jobs:
       #     RUST_LOG: "london_classical"
 
       - name: Download JSON data from release
-      - run: |
+        run: |
           mkdir -p src/assets
           cd src/assets
           curl -LO https://github.com/penelopeysm/london_classical/releases/download/json/concerts.json
