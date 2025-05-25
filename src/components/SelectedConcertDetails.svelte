@@ -64,6 +64,7 @@
         |
         {getPriceString(selectedConcert)}
         <br />
+        <span>{selectedConcert.venue}</span><br />
         <a href={selectedConcert.url} target="_blank">Link to concert</a>
         {#if selectedConcert.programme_pdf_url}
             | <a href={selectedConcert.programme_pdf_url} target="_blank"

@@ -46,14 +46,7 @@ async fn scrape_page(page: u32, client: &reqwest::Client) -> Vec<core::ConcertDa
         .expect("Failed to parse Southbank page");
     let doc: Html = Html::parse_document(&html);
 
-    println!("\n\n\nGot HTML: {}\n\n\n", html);
-
     let slc_concert_link: Selector = Selector::parse("a.c-event-card__cover-link").unwrap();
-
-    println!(
-        "Found {} links to concerts",
-        doc.select(&slc_concert_link).count()
-    );
 
     let futures = doc.select(&slc_concert_link).map(|link_elem| {
         let url = link_elem
@@ -91,7 +84,6 @@ async fn scrape_concert_info(concert_url: &str, client: &reqwest::Client) -> cor
         .collect::<String>()
         .trim()
         .to_string();
-    println!("\n\nFound concert title: {}", title);
 
     let slc_datetime = Selector::parse("div.c-event-masthead__event-datetime").unwrap();
     let datetime_str = doc
@@ -115,8 +107,6 @@ async fn scrape_concert_info(concert_url: &str, client: &reqwest::Client) -> cor
             panic!("Unexpected datetime format: {}", datetime_str);
         }
     };
-    println!("  At datetime: {}", datetime_utc);
-    println!("  At URL: {}", concert_url);
 
     let slc_location = Selector::parse("span.c-event-masthead__event-location-label-text").unwrap();
     let venue = doc
@@ -128,7 +118,6 @@ async fn scrape_concert_info(concert_url: &str, client: &reqwest::Client) -> cor
         .pop()
         .expect("Venue text is empty")
         .trim();
-    println!("  At venue: {}", venue);
 
     let slc_description = Selector::parse("div.c-event-section__main > p").unwrap();
     let description = doc
@@ -141,20 +130,23 @@ async fn scrape_concert_info(concert_url: &str, client: &reqwest::Client) -> cor
                 .join(" ")
         })
         .join("\n");
-    println!("  With description: {:?}", description);
 
     // Prices are annoying -- sometimes they're listed as £15.00, sometimes £15, so we have to
     // check both. However, Southbank uniformly lists "from X price" so we don't need to check for
-    // maximum price.
+    // maximum price. (The only case where we need to care about the maximum price is if the
+    // concert is free, in which case it's just 0.)
     let slc_price = Selector::parse("span.c-event-masthead__event-price").unwrap();
     let price_elem = doc.select(&slc_price).next();
-    let min_price = match price_elem {
+    let (min_price, max_price) = match price_elem {
         None => {
             // no price was specified -- check if it's free
             let slc_free = Selector::parse("span.c-btn--free-no-ticket").unwrap();
             // if there is a free button, it's free, otherwise we just return None as we don't
             // know.
-            doc.select(&slc_free).next().map(|_| 0)
+            match doc.select(&slc_free).next() {
+                None => (None, None),
+                Some(_) => (Some(0), Some(0)),
+            }
         }
         Some(elem) => {
             let price_text = elem.text().collect::<String>();
@@ -176,26 +168,23 @@ async fn scrape_concert_info(concert_url: &str, client: &reqwest::Client) -> cor
                 })
                 .collect::<Vec<u32>>();
             prices.extend(other_prices);
-            prices.into_iter().min()
+            (prices.into_iter().min(), None)
         }
     };
-    println!("  With min_price: {:?}", min_price);
 
     let slc_performers = Selector::parse("p.c-event-performers__item").unwrap();
     let performers: Vec<core::Performer> = doc
         .select(&slc_performers)
         .map(|p_elem| parse_performer(p_elem))
         .collect();
-    println!("  With performers: {:?}", performers);
 
     let slc_pieces = Selector::parse("p.c-event-repertoire__item").unwrap();
     let pieces: Vec<core::Piece> = doc
         .select(&slc_pieces)
-        .filter_map(|p_elem| parse_piece(p_elem))
+        .flat_map(|p_elem| parse_piece(p_elem))
         .collect();
-    println!("  With pieces: {:?}", pieces);
 
-    core::ConcertData {
+    let concert = core::ConcertData {
         datetime: datetime_utc,
         url: concert_url.to_string(),
         performers,
@@ -206,10 +195,13 @@ async fn scrape_concert_info(concert_url: &str, client: &reqwest::Client) -> cor
         pieces,
         venue: venue.to_string(),
         min_price,
-        max_price: None,
+        max_price,
         is_wigmore_u35: false,
         is_prom: false,
-    }
+    };
+
+    core::report_concert(&concert);
+    concert
 }
 
 fn parse_datetime(date_str: &str, time_str: &str) -> DateTime<Utc> {
@@ -237,10 +229,6 @@ fn parse_datetime(date_str: &str, time_str: &str) -> DateTime<Utc> {
         "pm" => true,
         "am" => false,
         _ => {
-            eprintln!(
-                "hour: {}, minute: {}, remaining: {}",
-                unadjusted_hour, minute, remaining_chars
-            );
             panic!("Unexpected time format: {}", time_str);
         }
     };
@@ -278,31 +266,31 @@ fn parse_performer(p_elem: ElementRef) -> core::Performer {
     }
 }
 
-fn parse_piece(p_elem: ElementRef) -> Option<core::Piece> {
+fn parse_piece(p_elem: ElementRef) -> Vec<core::Piece> {
     let slc_composer = Selector::parse("span.c-event-repertoire__composer").unwrap();
     let composer_elem = p_elem.select(&slc_composer).next();
 
     match composer_elem {
-        None => None,
+        None => vec![],
         Some(elem) => {
             let composer = elem.text().collect::<String>().trim().to_string();
             if composer == "Interval" || composer == "Programme includes" {
-                return None;
+                return vec![];
             }
             let slc_piece = Selector::parse("span.c-event-performers__work").unwrap();
-            let piece = p_elem
+            p_elem
                 .select(&slc_piece)
                 .next()
                 .unwrap()
                 .text()
                 .collect::<String>()
                 .trim()
-                .to_string();
-
-            Some(core::Piece {
-                composer,
-                title: piece,
-            })
+                .split("; ")
+                .map(|s| core::Piece {
+                    composer: composer.clone(),
+                    title: s.trim().to_string(),
+                })
+                .collect::<Vec<core::Piece>>()
         }
     }
 }
