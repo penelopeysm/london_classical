@@ -17,7 +17,7 @@ fn get_southbank_url(page: u32) -> String {
 pub async fn scrape(client: &reqwest::Client) -> Vec<core::ConcertData> {
     let mut concerts: Vec<core::ConcertData> = vec![];
 
-    for page in 1..=9 {
+    for page in 1..=2 {
         let page_concerts = scrape_page(page, client).await;
         concerts.extend(page_concerts);
     }
@@ -44,7 +44,7 @@ async fn scrape_page(page: u32, client: &reqwest::Client) -> Vec<core::ConcertDa
         .expect("Failed to parse Southbank page");
     let doc: Html = Html::parse_document(&html);
 
-    println!("\n\n\nGot HTML: {:?}\n\n\n", doc);
+    println!("\n\n\nGot HTML: {}\n\n\n", html);
 
     let slc_concert_link: Selector = Selector::parse("a.c-event-card__cover-link").unwrap();
 
