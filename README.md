@@ -25,6 +25,7 @@ Things I probably would like to add, but haven't yet:
 Unfortunately, I haven't been able to get GitHub Actions runners to scrape Southbank concerts (due to Cloudflare).
 I'm not sure if this can be fixed with headers, or if it's an IP block (which would probably necessitate using a proxy).
 This means that the website, unfortunately, has to be built manually right now.
+See below for instructions.
 
 ## Run locally
 
@@ -54,8 +55,11 @@ This means that the website, unfortunately, has to be built manually right now.
    pnpm dev
    ```
 
-## Generating types
+4. To deploy the website to GitHub Pages with the local list of concerts (in `src/assets/concerts.json`, run:
 
-The types associated with concerts are defined in `rust/src/core.rs`.
-These types are exported to TypeScript using `ts-rs`, and live inside `src/lib/bindings`
-To update the TypeScript bindings, run `pnpm rust:types`
+   ```
+   pnpm gh
+   ```
+
+   This uploads the JSON file to a GitHub release, and triggers the deployment GiHub Action (which fetches the JSON file and builds the website).
+   Note that you will need to be logged into GitHub CLI for this to work.
