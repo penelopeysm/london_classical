@@ -31,6 +31,10 @@ jobs:
         with:
           workspaces: "rust -> target"
 
+      - name: check out curl
+        run: |
+          curl -H 'User-Agent: penelopeysm/london-classical:0.1' https://www.southbankcentre.co.uk/whats-on/page/2/?artform-filter=classical-music
+
       - name: Generate JSON containing all concerts
         run: pnpm rust
         env:
