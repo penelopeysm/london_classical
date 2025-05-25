@@ -55,8 +55,9 @@ function satisfies(concert: Concert, filters: FiltersType): boolean {
             p.name.toLowerCase().includes(ciSearchTerm),
         );
 
-    // Check boolean tags
-    let booleanPass = filters.booleanTagNames.every((tag) => {
+    // Check boolean tags (using OR)
+    let noBooleanFilters = filters.booleanTagNames.length === 0;
+    let booleanFiltersPass = filters.booleanTagNames.some((tag) => {
         let filter = allBooleanFilters.find((f) => f.tagName === tag);
         if (filter === undefined) {
             console.error(`Unknown boolean tag ${tag}`);
@@ -64,6 +65,7 @@ function satisfies(concert: Concert, filters: FiltersType): boolean {
         }
         return filter.filterFunc(concert);
     });
+    let booleanPass = noBooleanFilters || booleanFiltersPass;
 
     // Return conjunction of both
     return searchPass && booleanPass;

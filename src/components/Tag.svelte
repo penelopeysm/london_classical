@@ -27,11 +27,11 @@
 <style>
     button.tag {
         font-family: inherit;
-        padding: 2px 5px;
+        padding: 0px 3px;
         border-radius: 5px;
+        border: 1.5px solid transparent;
         margin: 0;
         color: white;
-        border: none;
         width: max-content;
     }
 
@@ -46,5 +46,10 @@
 
     button.tag.can-add > span::before {
         content: "+ ";
+    }
+
+    button.tag:hover {
+        border: 1.5px solid black;
+        transition: border 0.2s ease-in-out;
     }
 </style>
