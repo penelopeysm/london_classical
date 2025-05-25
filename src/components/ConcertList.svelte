@@ -2,7 +2,7 @@
     import Tags from "src/components/Tags.svelte";
     import { type Concert } from "src/lib/bindings/Concert";
     import { formatDate, getPriceString } from "src/lib/utils";
-    import { concertViews, selectedConcertIds } from "src/lib/stores";
+    import { selectedConcertIds } from "src/lib/stores";
     import { notUndefined } from "src/lib/utils";
 
     export let allConcerts: Concert[];

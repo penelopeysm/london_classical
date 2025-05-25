@@ -4,9 +4,21 @@ import { initialFilters, type FiltersType } from "src/lib/filters";
 
 // Concerts and their views
 type ConcertViews = Map<string, Concert[]>;
-import allConcerts from "src/assets/concerts.json";
+import allConcertsIncludingPast from "src/assets/concerts.json";
 export const defaultViewName = "All";
 const localStorageKey = "local_views";
+
+// Filter out concerts that are in the past
+const now = new Date();
+export let allConcerts = allConcertsIncludingPast.filter((concert: Concert) => {
+    if (new Date(concert.datetime) < now) {
+        console.warn(`Removing concert as it has already passed`, concert);
+        return false;
+    }
+    else {
+        return true;
+    }
+});
 
 // This function expects { "viewName": ["concertId1", "concertId2", ...], ... }
 export function viewFromJson(viewJson: string): ConcertViews {
