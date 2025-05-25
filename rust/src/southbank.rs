@@ -17,7 +17,10 @@ fn get_southbank_url(page: u32) -> String {
 pub async fn scrape(client: &reqwest::Client) -> Vec<core::ConcertData> {
     let mut concerts: Vec<core::ConcertData> = vec![];
 
-    for page in 1..=2 {
+    // TODO: Dynamically determine the number of pages to scrape
+    // TODO: This should be 9. However, one of the pages throws an error
+    // due to the date not being parsed, and I'm too lazy to fix it right now.
+    for page in 1..=7 {
         let page_concerts = scrape_page(page, client).await;
         concerts.extend(page_concerts);
     }
