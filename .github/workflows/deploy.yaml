@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '0 0 * * *'
+  release:
+    types: [edited]
+  # schedule:
+  #   - cron: '0 0 * * *'
 
 permissions:
   contents: write
