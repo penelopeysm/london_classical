@@ -35,6 +35,8 @@ jobs:
         run: pnpm rust
         env:
           RUST_LOG: "london_classical"
+          LDNCLS_WIGMORE_DISABLE: "true"
+          LDNCLS_PROMS_DISABLE: "true"
 
       - name: Generate TypeScript types from Rust structs
         run: pnpm rust:types
