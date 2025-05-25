@@ -16,13 +16,14 @@ Scraping is currently implemented for classical music concerts at:
 - ✅ BBC Proms 2025
 - ✅ Southbank Centre
 
-Things I haven't yet implemented:
+Things I probably would like to add, but haven't yet:
 
 - ❌ Barbican
-- ❌ Anything else at the Royal Albert Hall
+- ❌ Royal Albert Hall
+- ❌ Cadogan Hall
 
 Unfortunately, I haven't been able to get GitHub Actions runners to scrape Southbank concerts (due to Cloudflare).
-I'm not sure if this can be fixed with headers, or if it's an IP block.
+I'm not sure if this can be fixed with headers, or if it's an IP block (which would probably necessitate using a proxy).
 This means that the website, unfortunately, has to be built manually right now.
 
 ## Run locally
