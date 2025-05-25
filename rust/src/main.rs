@@ -1,5 +1,6 @@
 use log::{debug, info};
-use london_classical::core;
+use london_classical::{core, proms, southbank, wigmore};
+use reqwest::header;
 use std::fs::{create_dir_all, File};
 
 fn envvar_is_empty_or_undefined(var: &str) -> bool {
@@ -12,11 +13,18 @@ fn envvar_is_empty_or_undefined(var: &str) -> bool {
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
-    let client = reqwest::Client::new();
+
+    let mut headers = header::HeaderMap::new();
+    headers.insert(header::ACCEPT, header::HeaderValue::from_static("text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"));
+
+    let client = reqwest::Client::builder()
+        .default_headers(headers)
+        .user_agent("penelopeysm/london-classical/0.1")
+        .build()
+        .unwrap();
 
     // Fetch Wigmore concerts, first reading from $LDNCLS_WIGMORE_MAX and defaulting to 220 if not
     // given. If you push it a bit more it starts to rate limit
-    use london_classical::wigmore;
     let max_wigmore_concerts = {
         match std::env::var("LDNCLS_WIGMORE_MAX") {
             Ok(s) => match s.as_str() {
@@ -42,7 +50,6 @@ async fn main() {
     };
 
     // Fetch Proms
-    use london_classical::proms;
     let scrape_proms = envvar_is_empty_or_undefined("LDNCLS_PROMS_DISABLE");
     let mut proms_concerts = if scrape_proms {
         info!("Scraping Proms");
@@ -55,7 +62,6 @@ async fn main() {
     };
 
     // Southbank Centre
-    use london_classical::southbank;
     let scrape_southbank = envvar_is_empty_or_undefined("LDNCLS_SOUTHBANK_DISABLE");
     let mut southbank_concerts = if scrape_southbank {
         info!("Scraping Southbank Centre concerts");

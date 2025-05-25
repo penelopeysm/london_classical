@@ -14,8 +14,6 @@ pub async fn scrape(client: &reqwest::Client) -> Vec<core::ConcertData> {
 
     let html: String = client
         .get(PROMS_2025_URL)
-        // it 500's with default user-agent
-        .header("User-Agent", "penelopeysm/london-classical/0.1")
         .send()
         .await
         .expect("Failed to fetch Proms page")

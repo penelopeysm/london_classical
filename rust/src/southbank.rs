@@ -35,7 +35,6 @@ async fn scrape_page(page: u32, client: &reqwest::Client) -> Vec<core::ConcertDa
 
     let html: String = client
         .get(url)
-        .header("User-Agent", "penelopeysm/london-classical/0.1")
         .send()
         .await
         .expect("Failed to fetch Southbank page")
