@@ -16,11 +16,15 @@ Scraping is currently implemented for classical music concerts at:
 - ✅ BBC Proms 2025
 - ✅ Southbank Centre
 
-Things I probably would like to add, but haven't yet:
+Things I really would like to add, but haven't yet:
 
 - ❌ Barbican
+
+I might get around to these at some point, but they're lower priority:
+
 - ❌ Royal Albert Hall
 - ❌ Cadogan Hall
+- ❌ St Martin-in-the-Fields
 
 ## Run locally
 
