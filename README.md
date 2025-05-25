@@ -22,11 +22,6 @@ Things I probably would like to add, but haven't yet:
 - ❌ Royal Albert Hall
 - ❌ Cadogan Hall
 
-Unfortunately, I haven't been able to get GitHub Actions runners to scrape Southbank concerts (due to Cloudflare).
-I'm not sure if this can be fixed with headers, or if it's an IP block (which would probably necessitate using a proxy).
-This means that the website, unfortunately, has to be built manually right now.
-See below for instructions.
-
 ## Run locally
 
 1. Clone the repository.
@@ -55,11 +50,19 @@ See below for instructions.
    pnpm dev
    ```
 
-4. To deploy the website to GitHub Pages with the local list of concerts (in `src/assets/concerts.json`, run:
+## Deployment
 
-   ```
-   pnpm gh
-   ```
+Unfortunately, I haven't been able to get GitHub Actions runners to scrape Southbank concerts (due to Cloudflare).
+I think this is because of an IP block.
+This means that the scraping has to be done locally, and the results uploaded to GitHub (the website itself is still built using GitHub Actions) using:
 
-   This uploads the JSON file to a GitHub release, and triggers the deployment GiHub Action (which fetches the JSON file and builds the website).
-   Note that you will need to be logged into GitHub CLI for this to work.
+```
+pnpm rust
+pnpm gh
+```
+
+The first step generates the JSON file with the concert data.
+The second step uploads this file to [a GitHub release](https://github.com/penelopeysm/london_classical/releases/tag/json), and triggers the deployment GiHub Action (which fetches the JSON file and builds the website).
+
+Note that you will need to be logged into GitHub CLI for this to work.
+The user you are logged in as must also have the necessary permissions (i.e., you must be me).
