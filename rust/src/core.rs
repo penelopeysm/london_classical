@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use chrono_tz::Europe::London;
 use deunicode::deunicode;
 use log::info;
@@ -74,4 +74,19 @@ pub fn add_id_to_concert(c: ConcertData) -> Concert {
 pub fn report_concert(c: &ConcertData) {
     let london_datetime = c.datetime.with_timezone(&London);
     info!("Found {}: {}", london_datetime, c.title);
+}
+
+pub fn ymd_hm_to_utc(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> DateTime<Utc> {
+    London
+        .with_ymd_and_hms(year, month, day, hour, minute, 0)
+        .unwrap()
+        .with_timezone(&Utc)
+}
+
+pub fn naivedt_to_utc(date: NaiveDate, hour: u32, minute: u32) -> DateTime<Utc> {
+    let naive_datetime = date.and_hms_opt(hour, minute, 0).unwrap();
+    London
+        .from_local_datetime(&naive_datetime)
+        .unwrap()
+        .with_timezone(&Utc)
 }

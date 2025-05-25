@@ -1,43 +1,11 @@
-use chrono::{DateTime, TimeZone, Utc};
-use chrono_tz::Europe::London;
-use log::{debug, info, warn};
+use log::{debug, info};
 use london_classical::core;
-use serde::Serialize;
 use std::fs::{create_dir_all, File};
 
-#[derive(Debug, Serialize)]
-struct Concert {
-    datetime: DateTime<Utc>,
-    url: String,
-    venue: String,
-    title: String,
-    performers: Vec<core::Performer>,
-    pieces: Vec<core::Piece>,
-}
-
-#[allow(dead_code)]
-fn from_london_time(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> DateTime<Utc> {
-    London
-        .with_ymd_and_hms(year, month, day, hour, minute, 0)
-        .unwrap()
-        .with_timezone(&Utc)
-}
-
-#[allow(dead_code)]
-fn display_programme(concert: &Concert) {
-    println!("Concert: {}", concert.title);
-    println!("Venue: {}", concert.venue);
-    println!("Date and time: {}", concert.datetime.with_timezone(&London));
-    println!("Performers:");
-    for performer in &concert.performers {
-        match performer.instrument {
-            Some(ref instrument) => println!("  {}, {}", performer.name, instrument),
-            None => println!("  {}", performer.name),
-        }
-    }
-    println!("Pieces:");
-    for piece in &concert.pieces {
-        println!("  {} - {}", piece.composer, piece.title);
+fn envvar_is_empty_or_undefined(var: &str) -> bool {
+    match std::env::var(var) {
+        Ok(value) => value.is_empty(),
+        Err(_) => true,
     }
 }
 
@@ -59,13 +27,12 @@ async fn main() {
         }
     };
     debug!("max_wigmore_concerts: {:?}", max_wigmore_concerts);
-    let scrape_wigmore = {
-        match std::env::var("LDNCLS_WIGMORE_DISABLE") {
-            Ok(any) => any.is_empty(),
-            Err(_) => true,
-        }
-    };
+    let scrape_wigmore = envvar_is_empty_or_undefined("LDNCLS_WIGMORE_DISABLE");
     let mut wigmore_concerts = if scrape_wigmore {
+        info!(
+            "Scraping Wigmore Hall concerts (up to a maximum of {:?})",
+            max_wigmore_concerts
+        );
         let cs = wigmore::get_concerts(&client, max_wigmore_concerts).await;
         info!("Found {} Wigmore Hall concerts", cs.len());
         cs
@@ -76,18 +43,27 @@ async fn main() {
 
     // Fetch Proms
     use london_classical::proms;
-    let scrape_proms = {
-        match std::env::var("LDNCLS_PROMS_DISABLE") {
-            Ok(any) => any.is_empty(),
-            Err(_) => true,
-        }
-    };
+    let scrape_proms = envvar_is_empty_or_undefined("LDNCLS_PROMS_DISABLE");
     let mut proms_concerts = if scrape_proms {
-        let cs = proms::scrape(proms::PROMS_2025_URL, &client).await;
-        info!("Found {} Proms concerts", cs.len());
+        info!("Scraping Proms");
+        let cs = proms::scrape(&client).await;
+        info!("Found {} Proms", cs.len());
         cs
     } else {
-        info!("$LDNCLS_PROMS_DISABLE not empty; skipping Proms concerts");
+        info!("$LDNCLS_PROMS_DISABLE not empty; skipping Proms");
+        vec![]
+    };
+
+    // Southbank Centre
+    use london_classical::southbank;
+    let scrape_southbank = envvar_is_empty_or_undefined("LDNCLS_SOUTHBANK_DISABLE");
+    let mut southbank_concerts = if scrape_southbank {
+        info!("Scraping Southbank Centre concerts");
+        let cs = southbank::scrape(&client).await;
+        info!("Found {} Southbank Centre concerts", cs.len());
+        cs
+    } else {
+        info!("$LDNCLS_SOUTHBANK_DISABLE not empty; skipping Southbank Centre concerts");
         vec![]
     };
 
@@ -95,6 +71,7 @@ async fn main() {
     let mut full_concerts = vec![];
     full_concerts.append(&mut wigmore_concerts);
     full_concerts.append(&mut proms_concerts);
+    full_concerts.append(&mut southbank_concerts);
     full_concerts.sort_by_key(|concert| concert.datetime);
 
     // Add IDs in
@@ -110,11 +87,10 @@ async fn main() {
         .collect();
     all_ids.sort();
 
-    if all_ids.is_empty() {
-        info!("No concerts found!");
-    } else {
-        info!("Found {} concerts in total", all_ids.len());
-        for i in 0..all_ids.len() - 1 {
+    let n_concerts = all_ids.len();
+    info!("Found {} concerts in total", n_concerts);
+    if n_concerts > 0 {
+        for i in 0..n_concerts - 1 {
             if all_ids[i] == all_ids[i + 1] {
                 panic!("Duplicate ID: {}", all_ids[i]);
             }

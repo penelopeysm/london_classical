@@ -1,19 +1,19 @@
 use crate::core;
-use chrono::{NaiveDate, TimeZone, Utc};
-use chrono_tz::Europe::London;
+use chrono::{NaiveDate, Utc};
+use core::naivedt_to_utc;
 use log::info;
 use regex::Regex;
 use scraper::{ElementRef, Html, Selector};
 use std::cmp::min;
 
-pub const PROMS_2025_URL: &str = "https://www.bbc.co.uk/events/rb5v4f/by/date/2025";
+const PROMS_2025_URL: &str = "https://www.bbc.co.uk/events/rb5v4f/by/date/2025";
 
 // Scrapes concerts from BBC Proms website
-pub async fn scrape(url: &str, client: &reqwest::Client) -> Vec<core::ConcertData> {
-    info!("Scraping BBC Proms from URL: {}", url);
+pub async fn scrape(client: &reqwest::Client) -> Vec<core::ConcertData> {
+    info!("Scraping BBC Proms from URL: {}", PROMS_2025_URL);
 
     let html: String = client
-        .get(url)
+        .get(PROMS_2025_URL)
         // it 500's with default user-agent
         .header("User-Agent", "penelopeysm/london-classical/0.1")
         .send()
@@ -195,17 +195,14 @@ fn parse_single_concert(elem: ElementRef<'_>) -> PromsConcertMetadata {
 
 /// Combines the date and the concert metadata to form a full core::Concert
 fn make_full_concert(date: NaiveDate, metadata: PromsConcertMetadata) -> core::ConcertData {
-    let naive_datetime = date
-        .and_hms_opt(metadata.london_time.0, metadata.london_time.1, 0)
-        .unwrap();
-    let tz_datetime = London.from_local_datetime(&naive_datetime).unwrap();
+    let utc_time = naivedt_to_utc(date, metadata.london_time.0, metadata.london_time.1);
 
     let is_rah_prom = metadata.venue == "Royal Albert Hall"
         && (metadata.title.starts_with("Prom") || metadata.title.starts_with("First Night"));
     let promming_price = 800;
 
     let concert = core::ConcertData {
-        datetime: tz_datetime.with_timezone(&Utc),
+        datetime: utc_time,
         url: metadata.url,
         venue: metadata.venue,
         title: metadata.title,
@@ -282,7 +279,7 @@ mod tests {
     #[tokio::test]
     async fn test_proms_2025() {
         let client = reqwest::Client::new();
-        let concerts = scrape(PROMS_2025_URL, &client).await;
+        let concerts = scrape(&client).await;
         let json = serde_json::to_string(&concerts);
         assert!(json.is_ok());
     }
