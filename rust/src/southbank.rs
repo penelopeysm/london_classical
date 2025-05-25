@@ -44,6 +44,8 @@ async fn scrape_page(page: u32, client: &reqwest::Client) -> Vec<core::ConcertDa
         .expect("Failed to parse Southbank page");
     let doc: Html = Html::parse_document(&html);
 
+    println!("\n\n\nGot HTML: {:?}\n\n\n", doc);
+
     let slc_concert_link: Selector = Selector::parse("a.c-event-card__cover-link").unwrap();
 
     println!(
