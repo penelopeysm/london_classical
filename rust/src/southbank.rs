@@ -18,11 +18,16 @@ pub async fn scrape(client: &reqwest::Client) -> Vec<core::ConcertData> {
     let mut concerts: Vec<core::ConcertData> = vec![];
 
     // TODO: Dynamically determine the number of pages to scrape
-    // TODO: This should be 9. However, one of the pages throws an error
-    // due to the date not being parsed, and I'm too lazy to fix it right now.
-    for page in 1..=7 {
+    let mut page = 1;
+    loop {
         let page_concerts = scrape_page(page, client).await;
-        concerts.extend(page_concerts);
+        if page_concerts.is_empty() {
+            break;
+        }
+        else {
+            concerts.extend(page_concerts);
+            page += 1;
+        }
     }
 
     info!("Scraped {} concerts from Southbank Centre", concerts.len());
@@ -48,13 +53,19 @@ async fn scrape_page(page: u32, client: &reqwest::Client) -> Vec<core::ConcertDa
 
     let slc_concert_link: Selector = Selector::parse("a.c-event-card__cover-link").unwrap();
 
-    let futures = doc.select(&slc_concert_link).map(|link_elem| {
-        let url = link_elem
-            .value()
-            .attr("href")
-            .expect("Concert URL is missing href attribute");
-        scrape_concert_info(url, client)
-    });
+    let futures = doc
+        .select(&slc_concert_link)
+        .map(|link_elem| {
+            link_elem
+                .value()
+                .attr("href")
+                .expect("Concert URL is missing href attribute")
+        })
+        .filter(|url| {
+            // https://github.com/penelopeysm/london_classical/issues/3
+            !url.contains("christmas-classics")
+        })
+        .map(|url| scrape_concert_info(url, client));
     let concerts: Vec<core::ConcertData> = join_all(futures).await;
 
     // .filter_map(async |url| scrape_concert_info(url).await)

@@ -18,7 +18,7 @@ pub async fn get_concerts(client: &reqwest::Client, max: Option<usize>) -> Vec<c
 
     let wigmore_intermediate_concerts = get_api(client).await;
     let slice = match max {
-        Some(n) => &wigmore_intermediate_concerts[..n],
+        Some(n) => &wigmore_intermediate_concerts[..n.min(wigmore_intermediate_concerts.len())],
         None => &wigmore_intermediate_concerts,
     };
 

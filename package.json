@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "rust:types": "cd rust && TS_RS_EXPORT_DIR=../src/lib/bindings cargo test",
-    "rust": "cd rust && cargo run",
+    "rust": "RUST_LOG=info cd rust && cargo run",
     "gh": "./build_gh.sh"
   },
   "devDependencies": {
