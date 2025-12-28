@@ -37,7 +37,7 @@ export const allBooleanFilters: BooleanFilter[] = [
     {
         tagName: "Southbank Centre",
         tagColor: "#b84954",
-        filterFunc: (concert: Concert) => concert.venue.includes("Royal Festival Hall") || concert.venue.includes("Queen Elizabeth Hall"),
+        filterFunc: (concert: Concert) => concert.venue.includes("Royal Festival Hall") || concert.venue.includes("Queen Elizabeth Hall") || concert.venue.includes("Purcell Room"),
     }
 ];
 
